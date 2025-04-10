@@ -23,8 +23,11 @@ async function connect() {
         const msgContent = JSON.parse(message.content.toString());
         console.log(`Received job with input ${msgContent.type}`);
         if (msgContent.type == "create-user") {
+          await createUser(msgContent.email, msgContent.address);
         } else if (msgContent.type == "withdraw-request") {
+          await withdrawTokens(msgContent.amount, msgContent.email);
         } else if (msgContent.type == "getreward") {
+          await transferClientToken(msgContent.email);
         }
         channel.ack(message);
       } else {

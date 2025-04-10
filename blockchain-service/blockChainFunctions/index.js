@@ -17,7 +17,6 @@ const initializeContract = (view = false) => {
   );
 };
 
-// Create a new user
 const createUser = async (email, userAddress) => {
   try {
     const contract = initializeContract();
@@ -31,7 +30,6 @@ const createUser = async (email, userAddress) => {
   }
 };
 
-// Mint tokens to an account
 const mintTokens = async (toAddress, amount) => {
   try {
     const contract = initializeContract();
@@ -45,7 +43,6 @@ const mintTokens = async (toAddress, amount) => {
   }
 };
 
-// Burn tokens from an account
 const burnTokens = async (fromAddress, amount) => {
   try {
     const contract = initializeContract();
@@ -59,7 +56,6 @@ const burnTokens = async (fromAddress, amount) => {
   }
 };
 
-// Transfer 1 token to a client
 const transferClientToken = async (email) => {
   try {
     const contract = initializeContract();
@@ -73,7 +69,6 @@ const transferClientToken = async (email) => {
   }
 };
 
-// Withdraw tokens for ETH
 const withdrawTokens = async (tokenAmount, email) => {
   try {
     const contract = initializeContract();
@@ -87,7 +82,6 @@ const withdrawTokens = async (tokenAmount, email) => {
   }
 };
 
-// Donate ETH to contract
 const donateEth = async (amountInEth) => {
   try {
     const contract = initializeContract();

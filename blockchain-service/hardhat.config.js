@@ -22,7 +22,7 @@ module.exports = {
   },
   gasReporter: {
     enabled: true,
-    currency: "USD",
+    currency: "INR",
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
     token: "ETH",
     outputFile: "gasReportsETH.txt",
