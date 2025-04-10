@@ -66,7 +66,7 @@ export default function SignInComponent() {
   }
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-4 bg-white">
         <div>
           <FormField
             control={form.control}
