@@ -6,7 +6,7 @@ interface FareDataParams {
   showDaily: boolean;
 }
 
-const BASE_URL = "http://127.0.0.1:5000/statistics/fare";
+const BASE_URL = "https://qjjdh3m1-5000.inc1.devtunnels.ms/statistics/fare";
 
 export const fetchFareData = async ({
   selectedYear,
