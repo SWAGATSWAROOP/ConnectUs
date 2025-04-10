@@ -3,9 +3,10 @@
 <h1 align="center">
   🚗 Connect Us 🚶‍♀️
   <br />
-  <img src="https://cdnl.iconscout.com/lottie/premium/preview-watermark/ecological-transport-animated-icon-download-in-lottie-json-gif-static-svg-file-formats--sustainable-green-transportation-environmentally-friendly-ecology-pack-nature-icons-9600616.mp4" alt="Ride-sharing gif" width="300" />
+  <br/>
+  <img src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExZDE3bzA1dmN0anJjaWdyMTB5d2FveTF2N3BkN3k2cHQ5aXJtbWVvcSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xdKi4fkIO1YRy/giphy.gif" alt="Ride-sharing gif" width="400" />
 </h1>
-
+<br/>
 <p align="center">
   <b>Smarter. Cheaper. Greener.</b><br />
   A hyperlocal ride-matching and fare-optimization app for short-distance travel. <br />
