@@ -30,7 +30,7 @@ const AuthButtons = () => {
         <div className="px-2 ">
           <Link
             href={"/signin"}
-            className="rounded-xl bg-black from-black from-10% to-blue-500 px-4 py-2 text-white hover:bg-gradient-to-r"
+            className="rounded-xl bg-black"
           >
             Sign In
           </Link>
@@ -38,7 +38,7 @@ const AuthButtons = () => {
         <div className="px-2">
           <Link
             href={"/signup"}
-            className="rounded-xl bg-black from-black from-10% to-blue-500 px-4 py-2 text-white hover:bg-gradient-to-r"
+            className="rounded-xl bg-black"
           >
             Register
           </Link>

@@ -60,7 +60,7 @@ export default function SignUpComponent() {
         { headers: { "Content-type": "application-json" } },
       );
       toast({
-        title: "Hello From Hackrokers",
+        title: "Hello From ConnectUs",
         description: "Sign Up Successful",
       });
       router.push("/");

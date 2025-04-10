@@ -15,6 +15,8 @@ export default async function Navbar() {
           >
             ConnectUs
           </Link>
+          <AuthButtons /> 
+
         </div>
       </div>
     </div>

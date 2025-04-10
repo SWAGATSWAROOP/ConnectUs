@@ -55,7 +55,7 @@ export default function SignInComponent() {
         router.push("/");
       } else {
         toast({
-          title: "Hello From NexMeet",
+          title: "Hello From ConnectUs",
           description: "Sign In Successful",
         });
         router.push("/admin");

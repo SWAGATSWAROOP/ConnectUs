@@ -6,8 +6,8 @@ import { Toaster } from "./Component/ui/toaster";
 import Provider from "../lib/provider"
 
 export const metadata: Metadata = {
-  title: "HackBrokers",
-  description: "Your all in one crypto app",
+  title: "ConnectUS",
+  description: "Connect and Travel",
 };
 
 export default async function RootLayout({
