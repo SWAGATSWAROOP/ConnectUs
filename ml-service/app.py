@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, jsonify
 import pandas as pd
 import pickle
+import joblib
 import os
 from datetime import datetime
 from math import radians, sin, cos, sqrt, asin
@@ -69,37 +70,33 @@ def load_and_prepare_data():
 
     return df, None
 
+def aggregate_stats(df, column, group_type, year=None, month=None):
+    if group_type == 'yearly':
+        grouped = df.groupby('year')[column].agg(['max', 'min', 'mean', 'count', 'std']).reset_index()
+    elif group_type == 'monthly':
+        if year is None:
+            return None, "Missing 'year_name' for monthly aggregation."
+        df = df[df['year'] == int(year)]
+        grouped = df.groupby('month')[column].agg(['max', 'min', 'mean', 'count', 'std']).reset_index()
+    elif group_type == 'daily':
+        if year is None or month is None:
+            return None, "Missing 'year_name' and/or 'month_name' for daily aggregation."
+        df = df[(df['year'] == int(year)) & (df['month'] == int(month))]
+        grouped = df.groupby('day')[column].agg(['max', 'min', 'mean', 'count', 'std']).reset_index()
+    elif group_type == 'hourly':
+        if year is None or month is None:
+            return None, "Missing 'year_name' and/or 'month_name' for hourly aggregation."
+        df = df[(df['year'] == int(year)) & (df['month'] == int(month))]
+        grouped = df.groupby('hour')[column].agg(['max', 'min', 'mean', 'count', 'std']).reset_index()
+    else:
+        return None, "Invalid type. Use one of: yearly, monthly, daily, hourly"
 
-def aggregate_stats(df, column, group_type):
-    group_map = {
-        'year': 'year',
-        'month': 'month',
-        'day': 'day',
-        'weekday': 'weekday',
-        'weekend': 'weekend'
-    }
-
-    if group_type not in group_map:
-        return None, "Invalid type. Use one of: year, month, day, weekday, weekend"
-
-    group_col = group_map[group_type]
-
-    grouped = df.groupby(group_col)[column].agg(
-        max='max',
-        min='min',
-        mean='mean',
-        count='count',
-        std='std'
-    ).reset_index()
-
+    grouped.columns = [group_type[:-2] if i == 0 else i for i in grouped.columns]  # Rename first col
     return grouped.to_dict(orient='records'), None
-
 
 @app.route('/')
 def home():
     return render_template('index.html')
-
-
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -121,8 +118,7 @@ def predict():
         return render_template('index.html', prediction=f"Predicted Fare: ${prediction:.2f}")
     except Exception as e:
         return render_template('index.html', prediction=f"Error: {str(e)}")
-
-
+                               
 import numpy as np
 from numpy.linalg import norm
 
@@ -217,10 +213,12 @@ def train_model():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-
 @app.route('/statistics/fare', methods=['GET'])
 def fare_statistics():
     group_type = request.args.get('type', '').lower()
+    year = request.args.get('year_name')
+    month = request.args.get('month_name')
+
     df, error = load_and_prepare_data()
     if error:
         return jsonify({'error': error})
@@ -228,7 +226,7 @@ def fare_statistics():
     if 'fare_amount' not in df.columns:
         return jsonify({'error': "'fare_amount' column missing."})
 
-    result, error = aggregate_stats(df, 'fare_amount', group_type)
+    result, error = aggregate_stats(df, 'fare_amount', group_type, year, month)
     if error:
         return jsonify({'error': error})
 
@@ -238,6 +236,9 @@ def fare_statistics():
 @app.route('/statistics/passenger_count', methods=['GET'])
 def passenger_statistics():
     group_type = request.args.get('type', '').lower()
+    year = request.args.get('year_name')
+    month = request.args.get('month_name')
+
     df, error = load_and_prepare_data()
     if error:
         return jsonify({'error': error})
@@ -245,7 +246,7 @@ def passenger_statistics():
     if 'passenger_count' not in df.columns:
         return jsonify({'error': "'passenger_count' column missing."})
 
-    result, error = aggregate_stats(df, 'passenger_count', group_type)
+    result, error = aggregate_stats(df, 'passenger_count', group_type, year, month)
     if error:
         return jsonify({'error': error})
 

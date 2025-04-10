@@ -9,12 +9,12 @@
     <h1>Cab Fare Predictor</h1>
 
     <form method="post" action="/predict">
-        <input type="datetime-local" name="pickup_datetime" placeholder="Pickup Datetime" required>
-        <input name="pickup_longitude" placeholder="Pickup Longitude" required>
-        <input name="pickup_latitude" placeholder="Pickup Latitude" required>
-        <input name="dropoff_longitude" placeholder="Dropoff Longitude" required>
-        <input name="dropoff_latitude" placeholder="Dropoff Latitude" required>
-        <input name="passenger_count" placeholder="Passenger Count" required>
+        <input type="datetime-local" name="pickup_datetime" placeholder="Pickup Datetime">
+        <input name="pickup_longitude" placeholder="Pickup Longitude"  >
+        <input name="pickup_latitude" placeholder="Pickup Latitude"  >
+        <input name="dropoff_longitude" placeholder="Dropoff Longitude"  >
+        <input name="dropoff_latitude" placeholder="Dropoff Latitude"  >
+        <input name="passenger_count" placeholder="Passenger Count"  >
         <button type="submit">Predict Fare</button>
     </form>
 
@@ -24,7 +24,7 @@
 
     <h2>Retrain Model</h2>
     <form method="post" action="/retrain">
-        <input name="month" placeholder="Month (e.g., 2025-04)" required>
+        <input name="month" placeholder="Month (e.g., 2025-04)"  >
         <button type="submit">Retrain Model</button>
     </form>
 </body>
