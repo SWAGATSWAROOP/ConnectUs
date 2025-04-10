@@ -1,4 +1,4 @@
-import Navbar from "@/app/Component/Navbar"
+import Main from "@/app/Component/Main"
 export default function Admin() {
-  return <Navbar />
+  // return <Main />
 }
