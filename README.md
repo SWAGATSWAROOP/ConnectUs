@@ -1,10 +1,9 @@
 # Create the README.md content as a file and provide it for download
 
-readme_content = """
 <h1 align="center">
   🚗 Connect Us 🚶‍♀️
   <br />
-  <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmwwMWk5ZGV1cnJ6Y25raDNmZHR2NzlsZm9pcjB0Y3B3cTJ3eWRrZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o6Zt481isNVuQI1l6/giphy.gif" alt="Ride-sharing gif" width="300" />
+  <img src="https://cdnl.iconscout.com/lottie/premium/preview-watermark/ecological-transport-animated-icon-download-in-lottie-json-gif-static-svg-file-formats--sustainable-green-transportation-environmentally-friendly-ecology-pack-nature-icons-9600616.mp4" alt="Ride-sharing gif" width="300" />
 </h1>
 
 <p align="center">
@@ -66,14 +65,17 @@ readme_content = """
 
 1. Clone the repo  
    ```bash
-   git clone https://github.com/yourusername/connect-us.git
-   cd connect-us
+   git clone https://github.com/SWAGATSWAROOP/HackMol-6.0.git
+   cd HackMol-6.0
+   ```
 
 2. Install dependencies
 
 ```bash
 npm i # or yarn install
+```
 
 3. Run the app
 ```bash
 npm start # or react-native run-android / run-ios
+```
