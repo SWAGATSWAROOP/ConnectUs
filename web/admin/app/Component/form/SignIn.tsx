@@ -60,7 +60,7 @@ export default function SignInComponent() {
         });
         router.push("/admin");
       }
-    } catch (err) {
+    } catch {
       router.push("/AuthError");
     }
   }

@@ -1,10 +1,6 @@
-import Link from "next/link";
 import AuthButtons from "./Component/form/authbutton";
-import { Next_Auth_Config } from "@/lib/auth";
-import { getServerSession } from "next-auth";
 import Image from "next/image";
 export default async function Home() {
-    const session = await getServerSession(Next_Auth_Config);
     return (
         <div className="fixed left-0 right-0 top-0 z-10 bg-blue py-5 mt-12">
             

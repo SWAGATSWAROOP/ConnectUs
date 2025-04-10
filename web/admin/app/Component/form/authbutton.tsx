@@ -32,7 +32,7 @@ const AuthButtons = () => {
         return (
             <div className="flex space-x-2">
                 <Button variant="outline" className="bg-blue-700" asChild>
-                    <Link href="/SignIn" className="text-white">Let's get started &gt;</Link>
+                    <Link href="/SignIn" className="text-white">Get started &gt;</Link>
                 </Button>
             </div>
         );
