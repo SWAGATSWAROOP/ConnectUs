@@ -100,12 +100,12 @@ export default function SignInComponent() {
           />
         </div>
         <Button
-  className="mt-5 w-full bg-blue-700 hover:bg-blue-400 text-white rounded-full"
-  type="submit"
-  disabled={form.formState.isSubmitting}
->
-  {form.formState.isSubmitting ? "Signing In..." : "Sign In"}
-</Button>
+          className="mt-5 w-full bg-blue-700 hover:bg-blue-400 text-white rounded-full"
+          type="submit"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? "Signing In..." : "Sign In"}
+        </Button>
 
       </form>
       <div className="mx-auto my-4 flex w-full items-center justify-evenly before:mr-4 before:block before:h-px before:flex-grow before:bg-stone-400 after:ml-4 after:block after:h-px after:flex-grow after:bg-stone-400">
@@ -114,7 +114,7 @@ export default function SignInComponent() {
 
       <p className="mt-2 text-center text-sm text-gray-500">
         If you don&apos;t have an account, please&nbsp;
-        <Link className="text-blue-800 hover:underline" href="/signup">
+        <Link className="text-blue-800 hover:underline" href="/SignUp">
           <b>Sign up</b>
         </Link>
       </p>
