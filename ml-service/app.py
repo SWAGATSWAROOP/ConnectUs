@@ -47,6 +47,52 @@ def feature_engineering(df):
     )
     return df
 
+def load_and_prepare_data():
+    if not os.path.exists(data_store_path):
+        return None, "Data file not found."
+
+    df = pd.read_csv(data_store_path)
+
+    if 'pickup_datetime' not in df.columns:
+        return None, "'pickup_datetime' column missing."
+
+    df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'])
+
+    # Extract datetime components
+    df['year'] = df['pickup_datetime'].dt.year
+    df['month'] = df['pickup_datetime'].dt.month
+    df['day'] = df['pickup_datetime'].dt.day
+    df['weekday'] = df['pickup_datetime'].dt.weekday  # Monday = 0
+    df['weekend'] = df['weekday'].apply(lambda x: 'Weekend' if x >= 5 else 'Weekday')
+
+    return df, None
+
+
+def aggregate_stats(df, column, group_type):
+    group_map = {
+        'year': 'year',
+        'month': 'month',
+        'day': 'day',
+        'weekday': 'weekday',
+        'weekend': 'weekend'
+    }
+
+    if group_type not in group_map:
+        return None, "Invalid type. Use one of: year, month, day, weekday, weekend"
+
+    group_col = group_map[group_type]
+
+    grouped = df.groupby(group_col)[column].agg(
+        max='max',
+        min='min',
+        mean='mean',
+        count='count',
+        std='std'
+    ).reset_index()
+
+    return grouped.to_dict(orient='records'), None
+
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -75,39 +121,6 @@ def predict():
         return render_template('index.html', prediction=f"Error: {str(e)}")
 
 
-@app.route('/retrain', methods=['POST'])
-def retrain():
-    try:
-        data = request.form
-        actual_fare = float(data.get('fare_amount', 0))
-
-        features = {
-            'pickup_datetime': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'),
-            'pickup_longitude': float(data.get('pickup_longitude', 0)),
-            'pickup_latitude': float(data.get('pickup_latitude', 0)),
-            'dropoff_longitude': float(data.get('dropoff_longitude', 0)),
-            'dropoff_latitude': float(data.get('dropoff_latitude', 0)),
-            'passenger_count': int(data.get('passenger_count', 1))
-        }
-
-        df = pd.DataFrame([features])
-        df = feature_engineering(df)
-        pred = model_main.predict(df.drop(columns=['pickup_datetime']))[0]
-
-        if abs(pred - actual_fare) < 2:
-            df['fare_amount'] = actual_fare
-
-            if os.path.exists(data_store_path):
-                df_existing = pd.read_csv(data_store_path)
-                df_combined = pd.concat([df_existing, df])
-            else:
-                df_combined = df
-
-            df_combined.to_csv(data_store_path, index=False)
-
-        return render_template('index.html', prediction=f"Prediction: ${pred:.2f}, Retraining data stored.")
-    except Exception as e:
-        return render_template('index.html', prediction=f"Retrain Error: {str(e)}")
 
 
 @app.route('/train_model', methods=['POST'])
@@ -142,19 +155,38 @@ def train_model():
         return jsonify({'error': str(e)})
 
 
-@app.route('/statistics', methods=['GET'])
-def show_stats():
-    try:
-        if not os.path.exists(data_store_path):
-            return jsonify([])
+@app.route('/statistics/fare', methods=['GET'])
+def fare_statistics():
+    group_type = request.args.get('type', '').lower()
+    df, error = load_and_prepare_data()
+    if error:
+        return jsonify({'error': error})
 
-        df = pd.read_csv(data_store_path)
-        df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'])
-        df = df.sort_values('pickup_datetime')
-        return df.to_dict(orient='records')
-    except Exception as e:
-        return jsonify({'error': str(e)})
+    if 'fare_amount' not in df.columns:
+        return jsonify({'error': "'fare_amount' column missing."})
 
+    result, error = aggregate_stats(df, 'fare_amount', group_type)
+    if error:
+        return jsonify({'error': error})
+
+    return jsonify(result)
+
+
+@app.route('/statistics/passenger_count', methods=['GET'])
+def passenger_statistics():
+    group_type = request.args.get('type', '').lower()
+    df, error = load_and_prepare_data()
+    if error:
+        return jsonify({'error': error})
+
+    if 'passenger_count' not in df.columns:
+        return jsonify({'error': "'passenger_count' column missing."})
+
+    result, error = aggregate_stats(df, 'passenger_count', group_type)
+    if error:
+        return jsonify({'error': error})
+
+    return jsonify(result)
 
 # ------------------ Run the App ------------------ #
 

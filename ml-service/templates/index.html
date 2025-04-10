@@ -7,20 +7,24 @@
 </head>
 <body>
     <h1>Cab Fare Predictor</h1>
+
     <form method="post" action="/predict">
+        <input name="pickup_datetime" placeholder="Pickup Datetime (YYYY-MM-DD HH:MM:SS)" required>
+        <input name="pickup_longitude" placeholder="Pickup Longitude" required>
+        <input name="pickup_latitude" placeholder="Pickup Latitude" required>
+        <input name="dropoff_longitude" placeholder="Dropoff Longitude" required>
+        <input name="dropoff_latitude" placeholder="Dropoff Latitude" required>
         <input name="passenger_count" placeholder="Passenger Count" required>
-        <input name="distance" placeholder="Distance (km)" required>
-        <input name="time" placeholder="Time (minutes)" required>
-        <input name="companions" placeholder="Number of Companions" required>
-        <button type="submit">Predict</button>
+        <button type="submit">Predict Fare</button>
     </form>
 
     {% if prediction %}
-        <h2>{{ prediction }}</h2>
+        <h2>Predicted Fare: ${{ prediction }}</h2>
     {% endif %}
 
+    <h2>Retrain Model</h2>
     <form method="post" action="/retrain">
-        <input name="month" placeholder="Month (e.g., 2025-04)">
+        <input name="month" placeholder="Month (e.g., 2025-04)" required>
         <button type="submit">Retrain Model</button>
     </form>
 </body>
