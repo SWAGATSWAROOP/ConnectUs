@@ -16,10 +16,17 @@ const currentUser = {
   name: "You",
 };
 
+const generateId = () =>
+  `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
 export default function ChatRoom() {
   const [messages, setMessages] = useState([
     {
+      id: generateId(),
       text: "Welcome to the chat room!",
+      senderEmail: "system",
+      senderName: "System",
+      time: Math.floor(Date.now() / 1000),
     },
   ]);
   const [input, setInput] = useState("");
@@ -28,31 +35,34 @@ export default function ChatRoom() {
   useEffect(() => {
     const socketUrl = `wss://6w127351-8080.inc1.devtunnels.ms/ws?email=${currentUser.email}&room=room_13.082_80.271`;
     ws.current = new WebSocket(socketUrl);
-    // console.log(ws.current);
+
     ws.current.onopen = () => {
-      console.log("Connected to WebSocket");
+      console.log("✅ Connected to WebSocket");
     };
 
     ws.current.onmessage = (event) => {
-      const content = event.data;
-
-      // Ignore if this is the message sent by current user (optional if server echoes back)
-      if (content === input) return;
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: content,
-          senderEmail: "other",
-          senderName: "Anonymous",
-          time: Math.floor(Date.now() / 1000),
-        },
-      ]);
+      console.log("📩 Received from server:", event.data);
+      try {
+        const data = JSON.parse(event.data); // 👈 FIXED
+    
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            text: data.content,
+            senderEmail: data.user_id,
+            senderName: data.user_id === currentUser.email ? "You" : data.user_id,
+            time: data.time || Math.floor(Date.now() / 1000),
+          },
+        ]);
+      } catch (err) {
+        console.error("❌ JSON parse error:", err);
+      }
     };
+    
+    
 
-
-
-    ws.current.onerror = (e) => {
+    ws.current.onerror = (e:any) => {
       console.error("WebSocket error", e.message);
     };
 
@@ -69,23 +79,23 @@ export default function ChatRoom() {
     const message = input.trim();
     if (!message || !ws.current || ws.current.readyState !== WebSocket.OPEN) return;
 
-    // Send just the plain string
+    // Send message as plain text
     ws.current.send(message);
 
-    // Add to local messages
+    // Add it locally
     setMessages((prev) => [
       ...prev,
       {
+        id: generateId(),
         text: message,
         senderEmail: currentUser.email,
         senderName: currentUser.name,
-        time: Math.floor(Date.now() / 1000), // optional
+        time: Math.floor(Date.now() / 1000),
       },
     ]);
 
     setInput("");
   };
-
 
   return (
     <SafeAreaView className="flex-1 mt-4">
@@ -102,25 +112,27 @@ export default function ChatRoom() {
             return (
               <View
                 key={msg.id}
-                className={`max-w-[70%] px-4 py-3 my-2 rounded-2xl ${isCurrentUser
-                  ? "bg-blue-600 self-end rounded-br-none"
-                  : msg.senderEmail === "system"
+                className={`max-w-[70%] px-4 py-3 my-2 rounded-2xl ${
+                  isCurrentUser
+                    ? "bg-blue-600 self-end rounded-br-none"
+                    : msg.senderEmail === "system"
                     ? "bg-yellow-100 self-center rounded-xl"
                     : "bg-gray-300 self-start rounded-bl-none"
-                  }`}
+                }`}
               >
                 {!isCurrentUser && msg.senderEmail !== "system" && (
                   <Text className="text-xs text-gray-500 mb-1">
                     {msg.senderName}
                   </Text>
                 )}
-                <Text className={`${isCurrentUser ? "text-white" : "text-gray-600"}`}>
+                <Text
+                  className={`${isCurrentUser ? "text-white" : "text-gray-600"}`}
+                >
                   {msg.text}
                 </Text>
-                <Text className="text-[10px] text-gray-200 mt-1">
+                <Text className="text-[10px] text-gray-400 mt-1">
                   {new Date(msg.time * 1000).toLocaleTimeString()}
                 </Text>
-
               </View>
             );
           })}
