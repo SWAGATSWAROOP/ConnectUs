@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, jsonify
 import pandas as pd
 import pickle
+from flask_cors import CORS 
 import joblib
 import os
 from datetime import datetime
@@ -8,6 +9,7 @@ from math import radians, sin, cos, sqrt, asin
 from sklearn.ensemble import GradientBoostingRegressor
 
 app = Flask(__name__)
+CORS(app)
 
 # Paths
 model_main_path = 'models/decision_tree_prune.pkl'
@@ -65,38 +67,50 @@ def load_and_prepare_data():
     df['year'] = df['pickup_datetime'].dt.year
     df['month'] = df['pickup_datetime'].dt.month
     df['day'] = df['pickup_datetime'].dt.day
-    df['weekday'] = df['pickup_datetime'].dt.weekday  # Monday = 0
+    df['hour'] = df['pickup_datetime'].dt.hour
+    df['weekday'] = df['pickup_datetime'].dt.weekday 
     df['weekend'] = df['weekday'].apply(lambda x: 'Weekend' if x >= 5 else 'Weekday')
 
     return df, None
 
 def aggregate_stats(df, column, group_type, year=None, month=None):
     if group_type == 'yearly':
-        grouped = df.groupby('year')[column].agg(['max', 'min', 'mean', 'count', 'std']).reset_index()
+        grouped = df.groupby('year')[column].agg(['max', 'min', 'mean', 'count']).reset_index()
+        group_key = 'year'
     elif group_type == 'monthly':
         if year is None:
             return None, "Missing 'year_name' for monthly aggregation."
         df = df[df['year'] == int(year)]
-        grouped = df.groupby('month')[column].agg(['max', 'min', 'mean', 'count', 'std']).reset_index()
+        grouped = df.groupby('month')[column].agg(['max', 'min', 'mean', 'count']).reset_index()
+        group_key = 'month'
     elif group_type == 'daily':
         if year is None or month is None:
             return None, "Missing 'year_name' and/or 'month_name' for daily aggregation."
         df = df[(df['year'] == int(year)) & (df['month'] == int(month))]
-        grouped = df.groupby('day')[column].agg(['max', 'min', 'mean', 'count', 'std']).reset_index()
+        grouped = df.groupby('day')[column].agg(['max', 'min', 'mean', 'count']).reset_index()
+        group_key = 'day'
     elif group_type == 'hourly':
         if year is None or month is None:
             return None, "Missing 'year_name' and/or 'month_name' for hourly aggregation."
         df = df[(df['year'] == int(year)) & (df['month'] == int(month))]
-        grouped = df.groupby('hour')[column].agg(['max', 'min', 'mean', 'count', 'std']).reset_index()
+        grouped = df.groupby('hour')[column].agg(['max', 'min', 'mean', 'count']).reset_index()
+        group_key = 'hour'
     else:
         return None, "Invalid type. Use one of: yearly, monthly, daily, hourly"
 
-    grouped.columns = [group_type[:-2] if i == 0 else i for i in grouped.columns]  # Rename first col
-    return grouped.to_dict(orient='records'), None
+    # Round float values (optional)
+    grouped = grouped.round(6)
+
+    # Convert to the desired dictionary format
+    result = {col: grouped[col].tolist() for col in grouped.columns}
+    result[group_key] = grouped[group_key].tolist()
+
+    return result, None
 
 @app.route('/')
 def home():
     return render_template('index.html')
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:

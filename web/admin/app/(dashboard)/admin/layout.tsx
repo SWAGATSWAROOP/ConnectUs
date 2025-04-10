@@ -7,12 +7,12 @@ export default async function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerSession(Next_Auth_Config);
-  if (session?.user) {
+  // const session = await getServerSession(Next_Auth_Config);
+  // if (session?.user) {
     return (
         <div>{children}</div>
     );
-  } else {
-    return <Access />;
-  }
+  // } else {
+  //   return <Access />;
+  // }
 }
