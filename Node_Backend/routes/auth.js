@@ -53,6 +53,9 @@ router.post('/signin', async (req, res) => {
   const { username, password } = req.body;
 
   try {
+    if (!username || !password || !name) {
+      return res.status(400).json({ msg: 'Please provide all required fields' });
+    }
     const user = await prisma.user.findUnique({ where: { username } });
     if (!user) {
       return res.status(400).json({ msg: 'Invalid credentials' });

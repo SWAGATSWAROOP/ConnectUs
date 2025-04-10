@@ -7,16 +7,37 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [rePassword, setRePassword] = useState('');
   const navigation = useNavigation();
-  const handleSignUp = () => {
-    // Add sign-up validation logic
+  const handleSignUp = async () => {
     if (password !== rePassword) {
       console.warn("Passwords do not match!");
       return;
     }
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('Password:', password);
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: name,
+          username: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Signup successful:", data);
+        navigation.navigate("Login");
+      } else {
+        console.warn("Signup failed:", data.message || "Unknown error");
+      }
+    } catch (error) {
+      console.error("Error during signup:", error);
+    }
   };
+
 
   const handleLoginNavigation = () => {
     navigation.navigate("Login");

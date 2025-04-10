@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { FC } from "react";
 import "../globals.css";
-import Navbar from "../Component/Navbar";
+// import Navbar from "../Component/Main";
 
 interface Auth_LayoutProps {
   children: ReactNode;
@@ -10,7 +10,7 @@ interface Auth_LayoutProps {
 const Auth_Layout: FC<Auth_LayoutProps> = ({ children }) => {
   return (
     <>
-        <Navbar />
+        {/* <Navbar /> */}
         <div className="flex h-screen flex-col justify-center items-center ">
         <div className="rounded-md bg-gray-300 p-10">
           {children}</div>

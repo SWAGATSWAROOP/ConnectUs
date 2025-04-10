@@ -31,8 +31,8 @@ const AuthButtons = () => {
     } else {
         return (
             <div className="flex space-x-2">
-                <Button variant="outline" asChild>
-                    <Link href="/SignIn">Sign In</Link>
+                <Button variant="outline" className="bg-blue-700" asChild>
+                    <Link href="/SignIn" className="text-white">Let's get started &gt;</Link>
                 </Button>
             </div>
         );
