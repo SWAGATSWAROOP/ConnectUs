@@ -52,19 +52,73 @@ func main() {
 	go bulkInsertRoutine()
 
 	r := gin.Default()
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
+
+	r.GET("/rooms", func(c *gin.Context) {
+		email := c.Query("email")
+		latStr := c.Query("lat")
+		lngStr := c.Query("lng")
+
+		if email == "" || latStr == "" || lngStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "email, lat, and lng are required"})
+			return
+		}
+
+		lat, err1 := strconv.ParseFloat(latStr, 64)
+		lng, err2 := strconv.ParseFloat(lngStr, 64)
+		if err1 != nil || err2 != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lat/lng"})
+			return
+		}
+
+		ctx := context.Background()
+		_, err := rdb.GeoAdd(ctx, geoKey, &redis.GeoLocation{
+			Name:      email,
+			Longitude: lng,
+			Latitude:  lat,
+		}).Result()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "GeoAdd failed"})
+			return
+		}
+
+		nearby, err := rdb.GeoRadius(ctx, geoKey, lng, lat, &redis.GeoRadiusQuery{
+			Radius:    250,
+			Unit:      "m",
+			WithCoord: true,
+		}).Result()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "GeoRadius failed"})
+			return
+		}
+
+		roomMap := make(map[string]bool)
+		var rooms []string
+		for _, loc := range nearby {
+			room := fmt.Sprintf("room_%.3f_%.3f", loc.Latitude, loc.Longitude)
+			if !roomMap[room] {
+				roomMap[room] = true
+				rooms = append(rooms, room)
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{"nearby_rooms": rooms})
+	})
+
 	r.GET("/ws", func(c *gin.Context) {
 		handleWebSocket(c.Writer, c.Request)
 	})
+
 	r.Run()
 }
 
 func bulkInsertRoutine() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
-	var messages []interface{}
+	var messages []any
 	for {
 		select {
 		case msg := <-mongoInsertChan:
@@ -90,50 +144,17 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	userID := r.URL.Query().Get("userid")
-	latStr := r.URL.Query().Get("lat")
-	lngStr := r.URL.Query().Get("lng")
-	if userID == "" || latStr == "" || lngStr == "" {
-		log.Println("Missing query parameters: userid, lat, lng required")
+	email := r.URL.Query().Get("email")
+	roomID := r.URL.Query().Get("room")
+
+	if email == "" || roomID == "" {
+		log.Println("Missing query parameters: email and room required")
 		conn.WriteMessage(websocket.TextMessage, []byte("Missing query parameters"))
 		return
 	}
 
-	lat, err := strconv.ParseFloat(latStr, 64)
-	if err != nil {
-		log.Println("Invalid latitude:", err)
-		conn.WriteMessage(websocket.TextMessage, []byte("Invalid latitude"))
-		return
-	}
-	lng, err := strconv.ParseFloat(lngStr, 64)
-	if err != nil {
-		log.Println("Invalid longitude:", err)
-		conn.WriteMessage(websocket.TextMessage, []byte("Invalid longitude"))
-		return
-	}
-
-	ctx := context.Background()
-	_, err = rdb.GeoAdd(ctx, geoKey, &redis.GeoLocation{
-		Name:      userID,
-		Longitude: lng,
-		Latitude:  lat,
-	}).Result()
-	if err != nil {
-		log.Println("Redis GEOADD error:", err)
-	}
-
-	nearbyUsers, err := rdb.GeoRadius(ctx, geoKey, lng, lat, &redis.GeoRadiusQuery{
-		Radius:    250,
-		Unit:      "m",
-		WithCoord: true,
-	}).Result()
-	if err != nil {
-		log.Println("Redis GEORADIUS error:", err)
-	}
-	log.Printf("User %s at (%.5f, %.5f) has %d nearby users\n", userID, lat, lng, len(nearbyUsers))
-
-	roomID := fmt.Sprintf("room_%.3f_%.3f", lat, lng)
-	log.Println("Assigned room:", roomID)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  []string{"localhost:9092"},
@@ -142,42 +163,37 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	})
 	defer kafkaWriter.Close()
 
-	groupID := fmt.Sprintf("ws-%s-%d", userID, time.Now().UnixNano())
 	kafkaReader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  []string{"localhost:9092"},
-		Topic:    roomID,
-		GroupID:  groupID,
-		MinBytes: 10,
-		MaxBytes: 10e6,
+		Brokers:     []string{"localhost:9092"},
+		Topic:       roomID,
+		GroupID:     fmt.Sprintf("ws-%s-%d", email, time.Now().UnixNano()),
+		MinBytes:    10,
+		MaxBytes:    10e6,
+		StartOffset: kafka.LastOffset, // Only new messages
 	})
 	defer kafkaReader.Close()
 
 	kafkaMsgChan := make(chan ChatMessage)
-	exitChan := make(chan struct{})
 
 	go func() {
+		defer cancel() // trigger cancel on Kafka read error or disconnection
 		for {
-			select {
-			case <-exitChan:
+			m, err := kafkaReader.ReadMessage(ctx)
+			if err != nil {
+				log.Println("Kafka reader error:", err)
 				return
-			default:
-				m, err := kafkaReader.ReadMessage(ctx)
-				if err != nil {
-					log.Println("Kafka reader error:", err)
-					close(exitChan)
-					return
-				}
-				var msg ChatMessage
-				if err := json.Unmarshal(m.Value, &msg); err != nil {
-					log.Println("Unmarshal error:", err)
-					continue
-				}
-				kafkaMsgChan <- msg
 			}
+			var msg ChatMessage
+			if err := json.Unmarshal(m.Value, &msg); err != nil {
+				log.Println("Unmarshal error:", err)
+				continue
+			}
+			kafkaMsgChan <- msg
 		}
 	}()
 
 	go func() {
+		defer cancel() // close on WS write error
 		for {
 			select {
 			case msg := <-kafkaMsgChan:
@@ -188,10 +204,9 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				}
 				if err := conn.WriteMessage(websocket.TextMessage, msgBytes); err != nil {
 					log.Println("WebSocket write error:", err)
-					close(exitChan)
 					return
 				}
-			case <-exitChan:
+			case <-ctx.Done():
 				return
 			}
 		}
@@ -199,13 +214,13 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		select {
-		case <-exitChan:
+		case <-ctx.Done():
 			return
 		default:
 			messageType, messageBytes, err := conn.ReadMessage()
 			if err != nil {
 				log.Println("WebSocket read error:", err)
-				close(exitChan)
+				cancel() // clean exit
 				return
 			}
 			if messageType != websocket.TextMessage {
@@ -213,7 +228,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 
 			chatMsg := ChatMessage{
-				UserID:  userID,
+				UserID:  email,
 				Content: string(messageBytes),
 				Time:    time.Now().Unix(),
 			}
@@ -224,13 +239,13 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			err = kafkaWriter.WriteMessages(ctx, kafka.Message{
-				Key:   []byte(userID),
+				Key:   []byte(email),
 				Value: msgPayload,
 				Time:  time.Now(),
 			})
 			if err != nil {
 				log.Println("Kafka write error:", err)
-				close(exitChan)
+				cancel()
 				return
 			}
 
