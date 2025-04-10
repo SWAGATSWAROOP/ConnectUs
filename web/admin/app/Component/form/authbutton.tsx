@@ -34,7 +34,6 @@ const AuthButtons = () => {
                 <Button variant="outline" asChild>
                     <Link href="/SignIn">Sign In</Link>
                 </Button>
-
             </div>
         );
     }

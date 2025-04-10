@@ -14,12 +14,12 @@ const UserSchema = z.object({
   username: z
     .string()
     .min(1, {
-      message: "email is Required",
+      message: "Email is required",
     })
     .email("Invalid email"),
   password: z
     .string()
-    .min(8, { message: "password must contain atleat 8 character" }),
+    .min(8, { message: "Password must contain at least 8 characters" }),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { Name, username, password }: BodyType = UserSchema.parse(body);
 
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.admin.findUnique({
       where: {
         username: username,
       },
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await hash(password, 10);
 
-    const newUser = await prisma.user.create({
+    const newUser = await prisma.admin.create({
       data: {
         Name,
         username,
@@ -47,16 +47,19 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return Response.json({
-      user: newUser,
-      message: "Signed up Successfully",
-      status: 201,
-    });
+    return Response.json(
+      {
+        user: newUser,
+        message: "Signed up successfully",
+        status: 201,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error occurred while creating user:", error);
     return Response.json(
       { error: "An error occurred while creating user" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
