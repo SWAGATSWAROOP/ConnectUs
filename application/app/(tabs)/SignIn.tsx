@@ -18,7 +18,10 @@ const SignIn = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const handleSignupNavigation = () => {
+    navigation.navigate('SignUp')
+  };
+  
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please fill in all fields.");
@@ -48,7 +51,7 @@ const SignIn = () => {
       Alert.alert("Success", "Login successful!", [
         {
           text: "OK",
-          onPress: () => navigation.navigate("/"), 
+          onPress: () => navigation.navigate('Chat'),
         },
       ]);
     } catch (error: any) {
@@ -62,7 +65,7 @@ const SignIn = () => {
       <ScrollView contentContainerClassName="h-full">
         <Image
           source={images.login}
-          className="w-full h-3/5"
+          className="w-full h-2/5"
           resizeMode="contain"
         />
         <View className="px-10">
@@ -119,6 +122,15 @@ const SignIn = () => {
               </Text>
             </View>
           </TouchableOpacity>
+          <Text className="text-center text-gray-600 mt-4">
+            Don't have an account?{' '}
+            <Text
+              className="text-blue-500 font-semibold"
+              onPress={handleSignupNavigation}
+            >
+              Sign up
+            </Text>
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
