@@ -1,0 +1,12 @@
+{
+  "name": "connectus",
+  "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.3.0",
+    "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.5",
+    "express": "^5.1.0",
+    "hardhat": "^2.22.19"
+  }
+}
