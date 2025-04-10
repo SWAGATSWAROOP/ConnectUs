@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-
+import { useNavigation } from '@react-navigation/native';
 export default function SignUpScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rePassword, setRePassword] = useState('');
-
+  const navigation = useNavigation();
   const handleSignUp = () => {
     // Add sign-up validation logic
     if (password !== rePassword) {
@@ -19,8 +19,7 @@ export default function SignUpScreen() {
   };
 
   const handleLoginNavigation = () => {
-    // Navigate to login screen
-    console.log('Go to Login screen');
+    navigation.navigate("Login");
   };
 
   return (

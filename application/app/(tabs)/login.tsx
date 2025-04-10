@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-
+import { useNavigation } from '@react-navigation/native';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigation = useNavigation();
 
   const handleLogin = () => {
     // Handle login logic
@@ -12,9 +13,9 @@ export default function LoginScreen() {
   };
 
   const handleSignupNavigation = () => {
-    // Navigate to SignUp screen
-    console.log('Go to Sign Up screen');
+    navigation.navigate('SignUp')
   };
+
 
   return (
     <View className="flex-1 justify-center px-6 bg-white">

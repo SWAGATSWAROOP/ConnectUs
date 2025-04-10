@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 // import { Redirect } from "expo-router";
 
 const SignIn = () => {
+    const navigation = useNavigation();
     //   const { refetch, loading, isLoggedIn } = useGlobalContext();
 
     //   if (!loading && isLoggedIn) return <Redirect href="/" />;
