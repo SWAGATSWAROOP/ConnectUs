@@ -8,50 +8,6 @@ const Skeleton = lazy(() => import('./Skeleton'));
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
     ssr: false,
 });
-const dummyOptions = {
-    chart: {
-      id: 'fare-chart',
-      toolbar: { show: false },
-      zoom: { enabled: false },
-    },
-    xaxis: {
-      categories: [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-      ],
-    },
-    stroke: {
-      curve: 'smooth', // smooth line
-      width: 2,
-    },
-    markers: {
-      size: 4,
-      colors: ['#3b82f6'],
-      strokeColors: '#fff',
-      strokeWidth: 2,
-    },
-    colors: ['#3b82f6'],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.5,
-        opacityTo: 0.1,
-        stops: [0, 90, 100],
-      },
-    },
-    tooltip: {
-      enabled: true,
-    },
-  };
-  const dummySeries = [
-    {
-      name: 'Fare',
-      data: [35, 42, 28, 60, 55, 38, 70, 52, 65, 40, 58, 62], // Fluctuating values
-    },
-  ];
-  
-  
 const ChartOne: React.FC = () => {
     const [series, setSeries] = useState<ApexAxisChartSeries>([]);
     const [selectedYear, setSelectedYear] = useState<string | null>(null);
@@ -139,26 +95,26 @@ const ChartOne: React.FC = () => {
                 ]);
                 let categories: string[] | number[] = [];
 
-                if (!selectedYear) { 
+                if (!selectedYear) {
                     categories = data.year || [];
-                } else if (selectedYear && selectedMonth && showDaily) { 
-                    categories = data.hour || [];
+                } else if (selectedYear && selectedMonth && showDaily) {
+                    categories = (data.hour || []).map(String);
                 } else if (selectedYear && selectedMonth && !showDaily) {
-                    categories = data.day;
+                     categories = (data.day || []).map(String);
                 } else if (selectedYear) {
-                    categories = (data.month || []).map((num: number) => monthNames[num - 1]);
+                    categories = (data.month || []).map((num: number) => monthNames[num - 1]); 
                 }
 
                 setOptions((prev) => ({
                     ...prev,
                     xaxis: {
                         ...prev.xaxis,
-                        categories,
+                        categories : categories,
                     },
                 }));
             } catch (error) {
                 console.error("Error fetching data:", error);
-            } finally{
+            } finally {
                 // setLoading(false);
             }
         };
@@ -187,9 +143,9 @@ const ChartOne: React.FC = () => {
                         className="rounded bg-white px-3 py-1 text-xs font-medium text-black shadow-sm hover:shadow-md "
                     >
                         <option value="">Select Year</option>
-            {[2009, 2010, 2011, 2012, 2013, 2014].map((year) => (
-              <option key={year} value={year}>{year}</option>
-            ))}
+                        {[2009, 2010, 2011, 2012, 2013, 2014].map((year) => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
                     </select>
 
                     {/* Month Dropdown */}

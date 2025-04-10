@@ -129,7 +129,7 @@ def predict():
 
         prediction = model_main.predict(df.drop(columns=['pickup_datetime']))[0]
 
-        return render_template('index.html', prediction=f"Predicted Fare: ${prediction:.2f}")
+        return render_template('index.html', prediction=f"{prediction:.2f}")
     except Exception as e:
         return render_template('index.html', prediction=f"Error: {str(e)}")
                                

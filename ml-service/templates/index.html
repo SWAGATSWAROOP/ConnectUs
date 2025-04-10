@@ -21,11 +21,6 @@
     {% if prediction %}
         <h2>Predicted Fare: ${{ prediction }}</h2>
     {% endif %}
-
-    <h2>Retrain Model</h2>
-    <form method="post" action="/retrain">
-        <input name="month" placeholder="Month (e.g., 2025-04)"  >
-        <button type="submit">Retrain Model</button>
-    </form>
+ 
 </body>
 </html>
