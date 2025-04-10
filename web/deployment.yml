@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adminpanel-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: adminpanel
+  template:
+    metadata:
+      labels:
+        app: adminpanel
+    spec:
+      containers:
+      - name: adminpanel
+        image: sanghrakshit/adminpanel:latest
+        ports:
+        - containerPort: 3000
