@@ -13,6 +13,8 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	"github.com/segmentio/kafka-go"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var rdb = redis.NewClient(&redis.Options{
@@ -27,33 +29,63 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func main() {
-
-	r := gin.Default()
-
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
-
-	r.GET("/ws", func(c *gin.Context) {
-		handleWebSocket(c.Writer, c.Request)
-	})
-
-	r.Run()
-}
-
-type Message struct {
+type ChatMessage struct {
 	UserID  string `json:"user_id"`
 	Content string `json:"content"`
 	Time    int64  `json:"time"`
 }
 
+var mongoClient *mongo.Client
+var chatCollection *mongo.Collection
+var mongoInsertChan chan ChatMessage
+
+func main() {
+	ctx := context.Background()
+	var err error
+	mongoClient, err = mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		log.Fatal("Mongo connection error:", err)
+	}
+	chatCollection = mongoClient.Database("chatDB").Collection("messages")
+
+	mongoInsertChan = make(chan ChatMessage, 1000)
+	go bulkInsertRoutine()
+
+	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "pong"})
+	})
+	r.GET("/ws", func(c *gin.Context) {
+		handleWebSocket(c.Writer, c.Request)
+	})
+	r.Run()
+}
+
+func bulkInsertRoutine() {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+	var messages []interface{}
+	for {
+		select {
+		case msg := <-mongoInsertChan:
+			messages = append(messages, msg)
+		case <-ticker.C:
+			if len(messages) > 0 {
+				if _, err := chatCollection.InsertMany(context.Background(), messages); err != nil {
+					log.Println("MongoDB bulk insert error:", err)
+				} else {
+					log.Printf("Inserted %d messages into MongoDB\n", len(messages))
+				}
+				messages = nil
+			}
+		}
+	}
+}
+
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("WebSocket Upgrade Error:", err)
+		log.Println("WebSocket upgrade error:", err)
 		return
 	}
 	defer conn.Close()
@@ -62,7 +94,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	latStr := r.URL.Query().Get("lat")
 	lngStr := r.URL.Query().Get("lng")
 	if userID == "" || latStr == "" || lngStr == "" {
-		log.Println("Missing query parameters: userid, lat, lng are required")
+		log.Println("Missing query parameters: userid, lat, lng required")
 		conn.WriteMessage(websocket.TextMessage, []byte("Missing query parameters"))
 		return
 	}
@@ -81,7 +113,6 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-
 	_, err = rdb.GeoAdd(ctx, geoKey, &redis.GeoLocation{
 		Name:      userID,
 		Longitude: lng,
@@ -121,8 +152,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	})
 	defer kafkaReader.Close()
 
-	kafkaMsgChan := make(chan Message)
-
+	kafkaMsgChan := make(chan ChatMessage)
 	exitChan := make(chan struct{})
 
 	go func() {
@@ -137,7 +167,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 					close(exitChan)
 					return
 				}
-				var msg Message
+				var msg ChatMessage
 				if err := json.Unmarshal(m.Value, &msg); err != nil {
 					log.Println("Unmarshal error:", err)
 					continue
@@ -157,7 +187,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				if err := conn.WriteMessage(websocket.TextMessage, msgBytes); err != nil {
-					log.Println("Websocket write error:", err)
+					log.Println("WebSocket write error:", err)
 					close(exitChan)
 					return
 				}
@@ -174,7 +204,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		default:
 			messageType, messageBytes, err := conn.ReadMessage()
 			if err != nil {
-				log.Println("Websocket read error:", err)
+				log.Println("WebSocket read error:", err)
 				close(exitChan)
 				return
 			}
@@ -182,7 +212,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			chatMsg := Message{
+			chatMsg := ChatMessage{
 				UserID:  userID,
 				Content: string(messageBytes),
 				Time:    time.Now().Unix(),
@@ -193,7 +223,6 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				log.Println("JSON marshal error:", err)
 				continue
 			}
-
 			err = kafkaWriter.WriteMessages(ctx, kafka.Message{
 				Key:   []byte(userID),
 				Value: msgPayload,
@@ -203,6 +232,12 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				log.Println("Kafka write error:", err)
 				close(exitChan)
 				return
+			}
+
+			select {
+			case mongoInsertChan <- chatMsg:
+			default:
+				log.Println("MongoDB insert channel full; dropping message")
 			}
 		}
 	}
