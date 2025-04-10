@@ -9,7 +9,7 @@
     <h1>Cab Fare Predictor</h1>
 
     <form method="post" action="/predict">
-        <input name="pickup_datetime" placeholder="Pickup Datetime (YYYY-MM-DD HH:MM:SS)" required>
+        <input type="datetime-local" name="pickup_datetime" placeholder="Pickup Datetime" required>
         <input name="pickup_longitude" placeholder="Pickup Longitude" required>
         <input name="pickup_latitude" placeholder="Pickup Latitude" required>
         <input name="dropoff_longitude" placeholder="Dropoff Longitude" required>

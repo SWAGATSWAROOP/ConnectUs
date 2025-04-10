@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, jsonify
 import pandas as pd
-import joblib
+import pickle
 import os
 from datetime import datetime
 from math import radians, sin, cos, sqrt, asin
@@ -9,15 +9,17 @@ from sklearn.ensemble import GradientBoostingRegressor
 app = Flask(__name__)
 
 # Paths
-model_main_path = 'models/model_main.pkl'
-model_backup_path = 'models/model_backup.pkl'
-data_store_path = 'data/new_data.csv'
+model_main_path = 'models/decision_tree_prune.pkl'
+model_backup_path = 'models/decision_tree_prune.pkl'
 
-# Load models
-model_main = joblib.load(model_main_path)
-model_backup = joblib.load(model_backup_path)
+data_store_path = 'data/nyc.csv'
 
-threshold = 100  
+
+with open(model_main_path, 'rb') as f_main:
+    model_main = pickle.load(f_main)
+
+with open(model_backup_path, 'rb') as f_backup:
+    model_backup = pickle.load(f_backup)
 
 def distance_transform(longitude1, latitude1, longitude2, latitude2):
     travel_dist = []
@@ -121,6 +123,67 @@ def predict():
         return render_template('index.html', prediction=f"Error: {str(e)}")
 
 
+import numpy as np
+from numpy.linalg import norm
+
+@app.route('/retrain', methods=['POST'])
+def retrain():
+    try:
+        data = request.form
+        actual_fare = float(data.get('fare_amount', 0))
+
+        features = {
+            'pickup_datetime': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'),
+            'pickup_longitude': float(data.get('pickup_longitude', 0)),
+            'pickup_latitude': float(data.get('pickup_latitude', 0)),
+            'dropoff_longitude': float(data.get('dropoff_longitude', 0)),
+            'dropoff_latitude': float(data.get('dropoff_latitude', 0)),
+            'passenger_count': int(data.get('passenger_count', 1))
+        }
+
+        df_new = pd.DataFrame([features])
+        df_new = feature_engineering(df_new)
+
+        pred = model_main.predict(df_new.drop(columns=['pickup_datetime']))[0]
+
+        if abs(pred - actual_fare) < 4:
+            df_new['fare_amount'] = actual_fare
+
+            if os.path.exists(data_store_path):
+                df_existing = pd.read_csv(data_store_path)
+
+                # Apply same feature engineering to existing data
+                df_existing_fe = feature_engineering(df_existing.copy())
+
+                # Drop non-feature columns
+                cols_to_drop = ['pickup_datetime', 'fare_amount']
+                df_existing_features = df_existing_fe.drop(columns=[col for col in cols_to_drop if col in df_existing_fe])
+                df_new_features = df_new.drop(columns=[col for col in cols_to_drop if col in df_new])
+
+                # Covariance similarity check
+                cov_existing = np.cov(df_existing_features.T)
+                cov_new = np.cov(df_new_features.T)
+
+                # Frobenius norm based similarity
+                diff_norm = norm(cov_existing - cov_new, 'fro')
+                similarity_threshold = 1.0  # You can tweak this threshold
+
+                if diff_norm < similarity_threshold:
+                    df_combined = pd.concat([df_existing, df_new])
+                    df_combined.to_csv(data_store_path, index=False)
+                    msg = f"Prediction: ${pred:.2f}, Retraining data retained (covariance matched)."
+                else:
+                    msg = f"Prediction: ${pred:.2f}, Data not retained (covariance mismatch)."
+            else:
+                df_new.to_csv(data_store_path, index=False)
+                msg = f"Prediction: ${pred:.2f}, First retraining data stored."
+        else:
+            msg = f"Prediction: ${pred:.2f}, Error too large. Not stored."
+
+        return render_template('index.html', prediction=msg)
+
+    except Exception as e:
+        return render_template('index.html', prediction=f"Retrain Error: {str(e)}")
 
 
 @app.route('/train_model', methods=['POST'])
@@ -147,8 +210,8 @@ def train_model():
         model.fit(X, y)
 
         # Backup old model and save new one
-        joblib.dump(model_main, model_backup_path)
-        joblib.dump(model, model_main_path)
+        pickle.dump(model_main, model_backup_path)
+        pickle.dump(model, model_main_path)
 
         return jsonify({'status': 'Model retrained and saved.'})
     except Exception as e:
