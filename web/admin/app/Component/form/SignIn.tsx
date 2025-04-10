@@ -66,7 +66,7 @@ export default function SignInComponent() {
   }
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-4 bg-white">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-4">
         <div>
           <FormField
             control={form.control}
@@ -99,15 +99,20 @@ export default function SignInComponent() {
             )}
           />
         </div>
-        <Button className="mt-5 w-full" type="submit">
-          Sign In
-        </Button>
+        <Button
+  className="mt-5 w-full bg-blue-700 hover:bg-blue-400 text-white rounded-full"
+  type="submit"
+  disabled={form.formState.isSubmitting}
+>
+  {form.formState.isSubmitting ? "Signing In..." : "Sign In"}
+</Button>
+
       </form>
       <div className="mx-auto my-4 flex w-full items-center justify-evenly before:mr-4 before:block before:h-px before:flex-grow before:bg-stone-400 after:ml-4 after:block after:h-px after:flex-grow after:bg-stone-400">
         or
       </div>
 
-      <p className="mt-2 text-center text-sm font-semibold text-gray-600">
+      <p className="mt-2 text-center text-sm text-gray-500">
         If you don&apos;t have an account, please&nbsp;
         <Link className="text-blue-800 hover:underline" href="/signup">
           <b>Sign up</b>

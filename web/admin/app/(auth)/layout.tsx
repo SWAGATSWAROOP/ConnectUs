@@ -12,7 +12,7 @@ const Auth_Layout: FC<Auth_LayoutProps> = ({ children }) => {
     <>
         {/* <Navbar /> */}
         <div className="flex h-screen flex-col justify-center items-center ">
-        <div className="rounded-md bg-gray-300 p-10">
+        <div className="rounded-md bg-gray-200  p-10">
           {children}</div>
         </div>
     </>

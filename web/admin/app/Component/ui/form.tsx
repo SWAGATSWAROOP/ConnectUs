@@ -74,15 +74,20 @@ const FormItem = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
-  const id = React.useId()
+  const id = React.useId();
 
   return (
     <FormItemContext.Provider value={{ id }}>
-      <div ref={ref} className={className} {...props} />
+      <div
+        ref={ref}
+        className={cn("mb-5", className)}
+        {...props}
+      />
     </FormItemContext.Provider>
-  )
-})
-FormItem.displayName = "FormItem"
+  );
+});
+FormItem.displayName = "FormItem";
+
 
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
