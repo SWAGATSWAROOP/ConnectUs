@@ -6,11 +6,40 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
 
-  const handleLogin = () => {
-    // Handle login logic
-    console.log('Email:', email);
-    console.log('Password:', password);
+  const handleLogin = async () => {
+    if (!email || !password) {
+      alert('Please enter both email and password.');
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: email,
+          password: password,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert('Login successful!');
+        console.log('User:', data.user);
+        console.log('Token:', data.token);
+  
+      } else {
+        alert(data.msg || 'Invalid credentials');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Something went wrong. Please try again later.');
+    }
   };
+  
 
   const handleSignupNavigation = () => {
     navigation.navigate('SignUp')
