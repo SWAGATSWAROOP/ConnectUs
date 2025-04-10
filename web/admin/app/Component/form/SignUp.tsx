@@ -84,7 +84,7 @@ export default function SignUpComponent() {
               <FormItem>
                 <FormLabel className="mb-2 mt-5 text-white block text-xs font-2xl">Name</FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="Sid" {...field} />
+                  <Input type="text" placeholder="Name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

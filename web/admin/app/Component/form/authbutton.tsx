@@ -5,47 +5,39 @@ import { Button } from "../ui/button";
 import { useToast } from "../ui/use-toast";
 
 const AuthButtons = () => {
-  const { data: session } = useSession();
-  const { toast } = useToast();
+    const { data: session } = useSession();
+    const { toast } = useToast();
 
-  const handleLogout = async () => {
-    await signOut({ redirect: false, callbackUrl: "/" });
-    toast({
-      title: "Logged Out Successfully",
-      description: "See you Soon",
-    });
+    const handleLogout = async () => {
+        await signOut({ redirect: false, callbackUrl: "/" });
+        toast({
+            title: "Logged Out Successfully",
+            description: "See you soon",
+        });
+        window.location.replace("/");
+    };
 
-    window.location.replace("/");
-  };
+    if (session) {
+        return (
+            <div>
+                <Button onClick={handleLogout} variant="destructive">
+                    Logout
+                </Button>
+                <Button variant="outline" asChild>
+                    <Link href="/signup">Create Admin</Link>
+                </Button>
+            </div>
+        );
+    } else {
+        return (
+            <div className="flex space-x-2">
+                <Button variant="outline" asChild>
+                    <Link href="/SignIn">Sign In</Link>
+                </Button>
 
-  if (session) {
-    return (
-      <Button onClick={handleLogout} variant="destructive">
-        Logout
-      </Button>
-    );
-  } else {
-    return (
-      <>
-        <div className="px-2 ">
-          <Link
-            href={"/signin"}
-            className="rounded-xl bg-black"
-          >
-            Sign In
-          </Link>
-        </div>
-        <div className="px-2">
-          <Link
-            href={"/signup"}
-            className="rounded-xl bg-black"
-          >
-            Register
-          </Link>
-        </div>
-      </>
-    );
-  }
+            </div>
+        );
+    }
 };
 
 export default AuthButtons;
