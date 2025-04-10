@@ -92,6 +92,11 @@ contract ConnectUsToken is ERC20, Ownable, ReentrancyGuard {
         return true;
     }
 
+    function getTokenBalance(string memory email) public view returns (uint256) {
+        require(existUser[email], "User does not exist");
+        return Users[email].noOfTokens;
+    }
+
     // For receving ETH from external sources
     receive() external payable { }
 }

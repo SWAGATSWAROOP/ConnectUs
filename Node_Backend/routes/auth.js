@@ -39,7 +39,7 @@ router.post('/signup', async (req, res) => {
       token,
       user: {
         id: newUser.id,
-        name: newUser.Name, 
+        name: newUser.name, 
         username: newUser.username,
       },
     });
@@ -53,7 +53,7 @@ router.post('/signin', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    if (!username || !password || !name) {
+    if (!username || !password) {
       return res.status(400).json({ msg: 'Please provide all required fields' });
     }
     const user = await prisma.user.findUnique({ where: { username } });

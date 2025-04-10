@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { Next_Auth_Config } from "../lib/auth";
 import { Toaster } from "./Component/ui/toaster";
 import Provider from "../lib/provider"
+import Navbar from "./Component/Navbar";
 
 export const metadata: Metadata = {
   title: "ConnectUS",
@@ -20,8 +21,10 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body>
-        <main className=" flex h-screen flex-col ">
+        <main>
+        <Navbar />
           <Provider session={session}>
+           
             <div className="">{children}</div>
           </Provider>
           <Toaster />

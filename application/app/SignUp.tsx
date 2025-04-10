@@ -1,49 +1,56 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+
 export default function SignUpScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rePassword, setRePassword] = useState('');
   const navigation = useNavigation();
+
   const handleSignUp = async () => {
-    if (password !== rePassword) {
-      console.warn("Passwords do not match!");
+    if (!name || !email || !password || !rePassword) {
+      Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
+  
+    if (password !== rePassword) {
+      Alert.alert('Error', 'Passwords do not match.');
+      return;
+    }
+  
     try {
-      console.log(name,email,password);
-      
-      const response = await fetch("https://bd68-106-66-61-85.ngrok-free.app/api/auth/signup"
-, {
-        method: "POST",
+      const response = await fetch('http://10.10.195.18:8000/api/auth/signup', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: name,
-          username: email,
-          password: password,
+          name,
+          username: email, 
+          password,
         }),
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log("Signup successful:", data);
-        navigation.navigate("Login");
-      } else {
-        console.warn("Signup failed:", data.message || "Unknown error");
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Signup failed');
       }
-    } catch (error:any) {
-      console.error("Error during signup:", error.message);
+  
+      const data = await response.json();
+      console.log('Signup successful:', data);
+      Alert.alert('Success', 'Account created successfully!');
+      navigation.navigate('/');
+    } catch (error: any) {
+      console.error('Error during signup:', error.message);
+      Alert.alert('Error', error.message);
     }
   };
-
+  
 
   const handleLoginNavigation = () => {
-    navigation.navigate("Login");
+    navigation.navigate('Login');
   };
 
   return (
@@ -88,7 +95,7 @@ export default function SignUpScreen() {
 
       <TouchableOpacity
         onPress={handleSignUp}
-        className="bg-yellow-400 py-4 mt-4 rounded-full mb-4 "
+        className="bg-yellow-400 py-4 mt-4 rounded-full mb-4"
       >
         <Text className="text-center font-semibold text-black">Sign Up</Text>
       </TouchableOpacity>

@@ -82,7 +82,7 @@ export default function SignUpComponent() {
             name="Name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="mb-2 mt-5 text-white block text-xs font-2xl">Name</FormLabel>
+                <FormLabel>Name</FormLabel>
                 <FormControl>
                   <Input type="text" placeholder="Name" {...field} />
                 </FormControl>
@@ -95,7 +95,7 @@ export default function SignUpComponent() {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="mb-2 mt-5 text-white block text-xs font-2xl">Email</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
@@ -112,7 +112,7 @@ export default function SignUpComponent() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="mb-2 mt-5 text-white block text-xs font-2xl">Password</FormLabel>
+                <FormLabel >Password</FormLabel>
                 <FormControl>
                   <Input type="password" placeholder="********" {...field} />
                 </FormControl>
@@ -125,7 +125,7 @@ export default function SignUpComponent() {
             name="Confirmpassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="mb-2 mt-5 text-white block text-xs font-2xl">Re-Enter Password</FormLabel>
+                <FormLabel >Re-Enter Password</FormLabel>
                 <FormControl>
                   <Input type="password" placeholder="********" {...field} />
                 </FormControl>
@@ -134,17 +134,22 @@ export default function SignUpComponent() {
             )}
           />
         </div>
-        <Button className="mt-5 w-full text-white" type="submit">
-          Sign Up
+        <Button
+          className="mt-5 w-full bg-blue-700 hover:bg-blue-400 text-white rounded-full"
+          type="submit"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? "Signing Up..." : "Sign Up"}
         </Button>
+
       </form>
-      <div className=" text-white mx-auto my-4 flex w-full items-center justify-evenly before:mr-4 before:block before:h-px before:flex-grow before:bg-stone-400 after:ml-4 after:block after:h-px after:flex-grow after:bg-stone-400">
+      <div className="uppercase mx-auto my-4 flex w-full items-center justify-evenly before:mr-4 before:block before:h-px before:flex-grow before:bg-stone-400 after:ml-4 after:block after:h-px after:flex-grow after:bg-stone-400">
         or
       </div>
 
-      <p className="mt-2 text-center text-sm font-semibold text-white">
+      <p className="mt-2 text-center text-sm text-gray-500">
         If you have an account, please&nbsp;
-        <Link className="text-white" href="/signin">
+        <Link className="text-blue-700 " href="/SignIn">
           <b>Sign In</b>
         </Link>
       </p>
