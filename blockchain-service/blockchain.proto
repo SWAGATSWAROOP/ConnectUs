@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package blockchainPackage;
+
+service UserService {
+  rpc checkIfUserExists(GetUserInfoRequest) returns (GetUserInfoResponse);
+}
+
+message GetUserInfoRequest{
+    string email = 1;
+}
+
+message GetUserInfoResponse{
+    bool exists = 1;
+}
+
+
+
