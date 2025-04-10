@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cab Fare Prediction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Cab Fare Predictor</h1>
+    <form method="post" action="/predict">
+        <input name="passenger_count" placeholder="Passenger Count" required>
+        <input name="distance" placeholder="Distance (km)" required>
+        <input name="time" placeholder="Time (minutes)" required>
+        <input name="companions" placeholder="Number of Companions" required>
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if prediction %}
+        <h2>{{ prediction }}</h2>
+    {% endif %}
+
+    <form method="post" action="/retrain">
+        <input name="month" placeholder="Month (e.g., 2025-04)">
+        <button type="submit">Retrain Model</button>
+    </form>
+</body>
+</html>
