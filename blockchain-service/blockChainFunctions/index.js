@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 const dotenv = require("dotenv");
 dotenv.config({ path: "../.env" });
 
-const TokenContract = require("../artifacts/contracts/User.sol/ConnectUsToken.json");
+const TokenContract = require("../artifacts/contracts/connectus-erc20.sol/ConnectUsToken.json");
 
 const initializeContract = (view = false) => {
   const provider = new ethers.JsonRpcProvider();

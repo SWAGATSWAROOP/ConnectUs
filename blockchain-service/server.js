@@ -15,7 +15,7 @@ app.get("/health-check", (req, res) => {
 
 app.get("/token/:email", async (req, res) => {
   try {
-    const email = req.query.email;
+    const email = req.params.email;
     let exists = false;
     blockChainGrpcClient.checkIfUserExists(
       { email: email },
