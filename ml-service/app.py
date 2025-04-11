@@ -13,7 +13,8 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 MONGO_URI = os.getenv("MONGODB_URL") 
-client = MongoClient(MONGO_URI)  # or your MongoDB URI
+# client = MongoClient(MONGO_URI)  # or your MongoDB URI
+client = MongoClient("mongodb+srv://guptasatyam1709:yUAxR9JslGCBVGwR@cluster0.s0d1jwb.mongodb.net/" )  # or your MongoDB URI
 db = client["Historical_Data"]
 cache_collection = db["Historical_Data"]
 

@@ -3,21 +3,55 @@ import login from '../Login';
 import { Alert } from 'react-native';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+
+import { useRouter } from 'expo-router';
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const router = useRouter();
   const navigation = useNavigation();
 
   const handleLogin = async () => {
-    const result = await login();
-    if (result) {
-      refetch();
-    } else {
-      Alert.alert("Error", "Failed to login");
-    }
+        if (!email || !password) {
+          Alert.alert("Error", "Please fill in all fields.");
+          return;
+        }
+    
+        try {
+          const response = await fetch("http://10.10.195.18:8000/api/auth/signin", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username: email,
+              password,
+            }),
+          });
+    
+          const data = await response.json();
+    
+          if (!response.ok) {
+            throw new Error(data.msg || "Login failed");
+          }
+    
+          console.log("Login successful:", data);
+    
+          Alert.alert("Success", "Login successful!", [
+            {
+              text: "OK",
+              onPress: () =>  navigation.navigate('index')
+            },
+          ]);
+        } catch (error: any) {
+          console.error("Error during login:", error.message);
+          // Alert.alert("Error", error.message);
+        }
   };
 
   const handleSignupNavigation = () => {
+    // navigation.navigate('SignUp')
     navigation.navigate('SignUp')
   };
 

@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { Alert } from 'react-native';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+
+import { useRouter } from 'expo-router';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
+  
+  const router = useRouter();
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please fill in all fields.");
@@ -35,7 +39,7 @@ export default function LoginScreen() {
       Alert.alert("Success", "Login successful!", [
         {
           text: "OK",
-          onPress: () => navigation.navigate("/"), 
+          onPress: () =>  navigation.navigate('index')
         },
       ]);
     } catch (error: any) {
@@ -45,6 +49,7 @@ export default function LoginScreen() {
   };
 
   const handleSignupNavigation = () => {
+    // navigation.navigate('SignUp')
     navigation.navigate('SignUp')
   };
 
