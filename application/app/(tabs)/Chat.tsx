@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 // Simulated logged-in user
 const currentUser = {
-  email: "test3@example.com",
+  email: "busharma2003@gmail.com",
   name: "You",
 };
 

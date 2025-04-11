@@ -40,7 +40,7 @@ export default function LoginScreen() {
       ]);
     } catch (error: any) {
       console.error("Error during login:", error.message);
-      Alert.alert("Error", error.message);
+      // Alert.alert("Error", error.message);
     }
   };
 
