@@ -27,12 +27,13 @@
 ## 🚀 About the Project
 
 > 🚶‍♂️ Ever found yourself going somewhere alone, while someone else nearby was headed the same way?
->  
+>
 > 💸 Tired of paying high fares just because the driver "couldn’t find anyone to share with"?
 
 **Connect Us** solves this.
 
-🔗 It connects people *within a 500m radius* going to the same destination so they can:
+🔗 It connects people _within a 500m radius_ going to the same destination so they can:
+
 - Share the ride
 - Split the fare
 - Reduce emissions
@@ -52,19 +53,26 @@
 
 ## 🛠 Tech Stack
 
-| Tech | Description |
-|------|-------------|
-| ⚛️ React Native / Flutter | For cross-platform mobile app |
-| 🌍 Firebase / Supabase | Real-time database and auth |
-| 📍 Google Maps API | Location services and routing |
-| 📈 Python / Node.js | For fare prediction and analytics |
-| 📊 Chart.js / D3.js | Visualizing fare trends |
+| Tech                              | Description                                                 |
+| --------------------------------- | ----------------------------------------------------------- |
+| ⚛️ **React Native**               | Cross-platform mobile app development                       |
+| 🌍 **MongoDB, PostgreSQL, Redis** | Real-time database, authentication, and geospatial indexing |
+| 📍 **Google Maps API**            | Location services and routing                               |
+| 🖥 **Flask, Node.js, Go**          | Backend services and APIs                                   |
+| 🔌 **REST API & WebSocket**       | Synchronous and real-time communication                     |
+| 📊 **Chart.js / D3.js**           | Interactive fare trend visualizations                       |
+| 🌐 **Next.js**                    | Web frontend development                                    |
+| 📬 **Kafka & RabbitMQ**           | Message brokers for real-time event streaming               |
+| 🔗 **Solidity & Ethereum**        | Blockchain for smart contracts and decentralized logic      |
+| 🧩 **JSON-RPC & gRPC**            | Efficient inter-service communication protocols             |
+| 🐳 **Docker & Kubernetes**        | Containerization and orchestration for scalable deployments |
 
 ---
 
 ## 🧑‍💻 Getting Started
 
-1. Clone the repo  
+1. Clone the repo
+
    ```bash
    git clone https://github.com/SWAGATSWAROOP/HackMol-6.0.git
    cd HackMol-6.0
@@ -77,6 +85,7 @@ npm i # or yarn install
 ```
 
 3. Run the app
+
 ```bash
 npm start # or react-native run-android / run-ios
 ```
