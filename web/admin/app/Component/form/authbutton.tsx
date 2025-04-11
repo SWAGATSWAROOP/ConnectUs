@@ -19,12 +19,17 @@ const AuthButtons = () => {
 
     if (session) {
         return (
-            <div>
-                <Button onClick={handleLogout} variant="destructive">
+            <div className="flex gap-3 justify-end mt-4">
+                <Button onClick={handleLogout} variant="outline" className="shadow-md">
                     Logout
                 </Button>
-                <Button variant="outline" asChild>
-                    <Link href="/signup">Create Admin</Link>
+
+                <Button variant="outline" asChild className="shadow-sm">
+                    <Link href="/SignUp">Create Admin</Link>
+                </Button>
+
+                <Button variant="outline" asChild className="shadow-sm">
+                    <Link href="/admin">Fare Stats</Link>
                 </Button>
             </div>
         );

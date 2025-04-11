@@ -41,7 +41,7 @@ export default function SignUpScreen() {
       const data = await response.json();
       console.log('Signup successful:', data);
       Alert.alert('Success', 'Account created successfully!');
-      navigation.navigate('/');
+      navigation.navigate('Chat');
     } catch (error: any) {
       console.error('Error during signup:', error.message);
       Alert.alert('Error', error.message);

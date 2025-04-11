@@ -7,7 +7,6 @@ export default function LoginScreen() {
   const navigation = useNavigation();
 
   const handleLogin = () => {
-    // Handle login logic
     console.log('Email:', email);
     console.log('Password:', password);
   };

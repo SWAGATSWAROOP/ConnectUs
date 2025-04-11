@@ -97,11 +97,52 @@ func main() {
 
 		roomMap := make(map[string]bool)
 		var rooms []string
+
+		// Kafka connection setup (once for the loop)
+		kafkaConn, err := kafka.Dial("tcp", "localhost:9092")
+		if err != nil {
+			log.Println("Kafka dial error:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Kafka connection error"})
+			return
+		}
+		defer kafkaConn.Close()
+
+		partitions, err := kafkaConn.ReadPartitions()
+		if err != nil {
+			log.Println("Kafka read partitions error:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Kafka metadata error"})
+			return
+		}
+		existingTopics := map[string]bool{}
+		for _, p := range partitions {
+			existingTopics[p.Topic] = true
+		}
+
 		for _, loc := range nearby {
 			room := fmt.Sprintf("room_%.3f_%.3f", loc.Latitude, loc.Longitude)
 			if !roomMap[room] {
 				roomMap[room] = true
 				rooms = append(rooms, room)
+
+				// Only create Kafka topic if it doesn't exist
+				if !existingTopics[room] {
+					err := kafkaConn.CreateTopics(kafka.TopicConfig{
+						Topic:             room,
+						NumPartitions:     1,
+						ReplicationFactor: 1,
+						ConfigEntries: []kafka.ConfigEntry{
+							{
+								ConfigName:  "retention.ms",
+								ConfigValue: "3600000", // 1 hour
+							},
+						},
+					})
+					if err != nil {
+						log.Println("Kafka topic creation failed:", err)
+					} else {
+						log.Println("Created Kafka topic:", room)
+					}
+				}
 			}
 		}
 
@@ -166,7 +207,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	kafkaReader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:     []string{"localhost:9092"},
 		Topic:       roomID,
-		GroupID:     fmt.Sprintf("ws-%s-%d", email, time.Now().UnixNano()),
+		GroupID:     fmt.Sprintf("ws-%s-%s", email, roomID),
 		MinBytes:    10,
 		MaxBytes:    10e6,
 		StartOffset: kafka.LastOffset, // Only new messages

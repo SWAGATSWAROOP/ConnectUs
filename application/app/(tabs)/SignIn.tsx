@@ -8,6 +8,9 @@ import {
   Alert,
   TextInput,
 } from "react-native";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import { SafeAreaView } from "react-native-safe-area-context";
 import images from "@/constants/images";
 import icons from "@/constants/icons";
@@ -15,45 +18,68 @@ import { useNavigation } from "@react-navigation/native";
 
 const SignIn = () => {
   const navigation = useNavigation();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignupNavigation = () => {
+    navigation.navigate("SignUp");
+  };
+
+  const GoogleLogin = async () => {
+    await GoogleSignin.hasPlayServices();
+    const userInfo = await GoogleSignin.signIn();
+    return userInfo;
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const googleUser = await GoogleLogin();
+      const idToken = googleUser.idToken;
+
+      const response = await axios.post("http://localhost:4000/google-login", {
+        idToken,
+      });
+
+      const data = response.data;
+      console.log("Google Login Response:", data);
+
+      await AsyncStorage.setItem("authToken", data.token);
+
+      // Navigate or update state accordingly
+      navigation.navigate("Home");
+    } catch (error) {
+      console.log("Google Login Error:", error.message);
+      Alert.alert("Google Login Failed", "Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields.");
+      Alert.alert("Error", "Please enter both email and password.");
       return;
     }
 
+    setLoading(true);
     try {
-      const response = await fetch("http://10.10.195.18:8000/api/auth/signin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: email,
-          password,
-        }),
+      const response = await axios.post("http://192.168.x.x:4000/google-login", {
+        idToken,
       });
 
-      const data = await response.json();
+      const data = response.data;
+      console.log("Login Response:", data);
 
-      if (!response.ok) {
-        throw new Error(data.msg || "Login failed");
-      }
+      await AsyncStorage.setItem("authToken", data.token);
 
-      console.log("Login successful:", data);
-
-      Alert.alert("Success", "Login successful!", [
-        {
-          text: "OK",
-          onPress: () => navigation.navigate("/"), 
-        },
-      ]);
-    } catch (error: any) {
-      console.error("Error during login:", error.message);
-      Alert.alert("Error", error.message);
+      navigation.navigate("Home");
+    } catch (error) {
+      console.log("Login Error:", error.message);
+      Alert.alert("Login Failed", "Invalid credentials or server error.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,7 +88,7 @@ const SignIn = () => {
       <ScrollView contentContainerClassName="h-full">
         <Image
           source={images.login}
-          className="w-full h-3/5"
+          className="w-full h-2/5"
           resizeMode="contain"
         />
         <View className="px-10">
@@ -74,7 +100,6 @@ const SignIn = () => {
             <Text className="text-primary-300">ease and pocket friendly</Text>
           </Text>
 
-          {/* Email input */}
           <TextInput
             placeholder="Email"
             className="border border-gray-300 rounded px-4 py-4 mt-6"
@@ -84,7 +109,6 @@ const SignIn = () => {
             keyboardType="email-address"
           />
 
-          {/* Password input */}
           <TextInput
             placeholder="Password"
             className="border border-gray-300 rounded px-4 py-4 mt-4"
@@ -105,7 +129,7 @@ const SignIn = () => {
           </Text>
 
           <TouchableOpacity
-            onPress={() => Alert.alert("Info", "Google Login Coming Soon")}
+            onPress={handleGoogleLogin}
             className="bg-white shadow-xl border border-1 shadow-zinc-300 rounded-full w-full py-4 mt-2"
           >
             <View className="flex flex-row items-center justify-center">
@@ -119,6 +143,16 @@ const SignIn = () => {
               </Text>
             </View>
           </TouchableOpacity>
+
+          <Text className="text-center text-gray-600 mt-4">
+            Don't have an account?{" "}
+            <Text
+              className="text-blue-500 font-semibold"
+              onPress={handleSignupNavigation}
+            >
+              Sign up
+            </Text>
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>

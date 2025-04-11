@@ -5,7 +5,7 @@ const grpcObject = grpc.loadPackageDefinition(packageDef);
 const blockChainPackage = grpcObject.blockchainPackage;
 
 const blockChainGrpcClient = new blockChainPackage.UserService(
-  "localhost:4000",
+  "localhost:8000",
   grpc.credentials.createInsecure()
 );
 

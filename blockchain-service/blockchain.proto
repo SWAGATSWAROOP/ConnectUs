@@ -3,16 +3,13 @@ syntax = "proto3";
 package blockchainPackage;
 
 service UserService {
-  rpc checkIfUserExists(GetUserInfoRequest) returns (GetUserInfoResponse);
+  rpc CheckIfUserExists (UserRequest) returns (UserResponse);
 }
 
-message GetUserInfoRequest{
-    string email = 1;
+message UserRequest {
+  string email = 1;
 }
 
-message GetUserInfoResponse{
-    bool exists = 1;
+message UserResponse {
+  bool checkExistance = 1;
 }
-
-
-

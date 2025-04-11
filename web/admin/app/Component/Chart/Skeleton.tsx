@@ -1,20 +1,20 @@
-// components/FareStatistics.tsx
-import React, { useState } from 'react';
-import ReactApexChart from 'react-apexcharts';
+import React, { useState } from "react";
+import ReactApexChart from "react-apexcharts";
+import { ApexOptions } from "apexcharts";
 
 interface ApexChartProps {
-  options: any;
-  series: any[];
+  options: ApexOptions;
+  series: ApexAxisChartSeries;
 }
 
 const monthNames = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 const FareStatistics: React.FC<ApexChartProps> = ({ options, series }) => {
-  const [selectedYear, setSelectedYear] = useState<string | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [, setSelectedYear] = useState<string | null>(null);
+  const [, setSelectedMonth] = useState<string | null>(null);
   const [showDaily, setShowDaily] = useState<boolean>(false);
 
   return (
