@@ -1,8 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import ConnectUsLogo from "../../public/connectus_web.png";
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
+import {  FaLinkedin } from "react-icons/fa";
 
 const Footer = () => {
   const socialLinks = {

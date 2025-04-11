@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: adminpanel-service
+spec:
+  selector:
+    app: adminpanel
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: NodePort
+
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-backend-service
+spec:
+  selector:
+    app: node-backend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP

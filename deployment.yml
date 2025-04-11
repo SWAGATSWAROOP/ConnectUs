@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-backend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-backend
+  template:
+    metadata:
+      labels:
+        app: node-backend
+    spec:
+      containers:
+        - name: node-backend
+          image: sanghrakshit/node-backend:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: backend-config
+
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adminpanel-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adminpanel
+  template:
+    metadata:
+      labels:
+        app: adminpanel
+    spec:
+      containers:
+        - name: adminpanel
+          image: sanghrakshit/adminpanel:latest
+          ports:
+            - containerPort: 3000
+
+
