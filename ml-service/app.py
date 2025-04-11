@@ -4,7 +4,6 @@ import pickle
 from flask_cors import CORS 
 import os
 from pymongo import MongoClient
-import json
 from datetime import datetime
 from math import radians, sin, cos, sqrt, asin
 from models.train_model import train_and_save_model

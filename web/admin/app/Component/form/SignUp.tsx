@@ -75,7 +75,7 @@ export default function SignUpComponent() {
   }
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className=" p-6">
+      <form onSubmit={form.handleSubmit(onSubmit)}>
         <div>
           <FormField
             control={form.control}
@@ -135,7 +135,7 @@ export default function SignUpComponent() {
           />
         </div>
         <Button
-          className="mt-5 w-full bg-blue-700 hover:bg-blue-400 text-white rounded-full"
+          className="mt-4 w-full bg-blue-700 hover:bg-blue-400 text-white rounded-full"
           type="submit"
           disabled={form.formState.isSubmitting}
         >
@@ -143,11 +143,11 @@ export default function SignUpComponent() {
         </Button>
 
       </form>
-      <div className="uppercase mx-auto my-4 flex w-full items-center justify-evenly before:mr-4 before:block before:h-px before:flex-grow before:bg-stone-400 after:ml-4 after:block after:h-px after:flex-grow after:bg-stone-400">
+      <div className="uppercase mx-auto my-3 flex w-full items-center justify-evenly before:mr-4 before:block before:h-px before:flex-grow before:bg-stone-400 after:ml-4 after:block after:h-px after:flex-grow after:bg-stone-400">
         or
       </div>
 
-      <p className="mt-2 text-center text-sm text-gray-500">
+      <p className="mt-1 text-center text-sm text-gray-500">
         If you have an account, please&nbsp;
         <Link className="text-blue-700 " href="/SignIn">
           <b>Sign In</b>

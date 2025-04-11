@@ -123,10 +123,10 @@ const ChartOne: React.FC = () => {
   }, [selectedYear, selectedMonth, showDaily]);
 
   return (
-    <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pb-5 pt-7.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:col-span-8">
-      <h5 className="text-3xl font-bold text-black text-center">Fare Statistics</h5>
-      <div className="flex w-full max-w-96 justify-end">
-        <div className="inline-flex items-center rounded-md bg-white p-2 shadow-sm dark:bg-meta-4 gap-2">
+    <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pb-2 pt-5 shadow-default sm:px-7.5 xl:col-span-8">
+      <h5 className="text-2xl font-bold text-black text-center">Fare Historical Statistics</h5>
+      <div className="w-full flex justify-end pr-4">
+        <div className="inline-flex items-center rounded-md bg-white p-2 shadow-sm gap-2">
           {/* Year Dropdown */}
           <select
             onChange={(e) => setSelectedYear(e.target.value || null)}
@@ -161,7 +161,7 @@ const ChartOne: React.FC = () => {
               type="checkbox"
               checked={showDaily}
               onChange={(e) => setShowDaily(e.target.checked)}
-              className="accent-black dark:accent-white"
+              className="accent-black"
             />
             <span>Show Hourly</span>
           </label>

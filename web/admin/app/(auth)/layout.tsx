@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { FC } from "react";
-import "../globals.css";
+import "../globals.css"; 
 
 
 interface Auth_LayoutProps {
@@ -10,10 +10,10 @@ interface Auth_LayoutProps {
 const Auth_Layout: FC<Auth_LayoutProps> = ({ children }) => {
   return (
     <>
-        <div className="flex h-screen flex-col justify-center items-center ">
-        <div className="rounded-md bg-gray-200  p-10">
+      <div className="flex m-10 flex-col justify-center items-center ">
+        <div className="rounded-md bg-gray-200 p-10">
           {children}</div>
-        </div>
+      </div> 
     </>
   );
 };

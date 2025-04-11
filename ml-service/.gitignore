@@ -3,3 +3,4 @@
 /requirements.txt
 /env
 /.env
+/models/__pycache__ 
