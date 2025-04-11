@@ -2,18 +2,24 @@ from flask import Flask, request, render_template, jsonify
 import pandas as pd
 import pickle
 from flask_cors import CORS 
-import joblib
 import os
+from pymongo import MongoClient
+import json
 from datetime import datetime
 from math import radians, sin, cos, sqrt, asin
-from sklearn.ensemble import GradientBoostingRegressor
-
+from models.train_model import train_and_save_model
+from dotenv import load_dotenv
+# Load environment variables
+load_dotenv()
 app = Flask(__name__)
 CORS(app)
+MONGO_URI = os.getenv("MONGODB_URL") 
+client = MongoClient(MONGO_URI)  # or your MongoDB URI
+db = client["Historical_Data"]
+cache_collection = db["Historical_Data"]
 
-# Paths
-model_main_path = 'models/decision_tree_prune.pkl'
-model_backup_path = 'models/decision_tree_prune.pkl'
+model_main_path = 'decision_tree_prune.pkl'
+model_backup_path = 'decision_tree_prune.pkl'
 
 data_store_path = 'data/nyc.csv'
 
@@ -136,12 +142,11 @@ def predict():
 import numpy as np
 from numpy.linalg import norm
 
-@app.route('/retrain', methods=['POST'])
+@app.route('/retrain_data', methods=['POST'])
 def retrain():
     try:
         data = request.form
         actual_fare = float(data.get('fare_amount', 0))
-
         features = {
             'pickup_datetime': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'),
             'pickup_longitude': float(data.get('pickup_longitude', 0)),
@@ -150,7 +155,6 @@ def retrain():
             'dropoff_latitude': float(data.get('dropoff_latitude', 0)),
             'passenger_count': int(data.get('passenger_count', 1))
         }
-
         df_new = pd.DataFrame([features])
         df_new = feature_engineering(df_new)
 
@@ -158,7 +162,6 @@ def retrain():
 
         if abs(pred - actual_fare) < 4:
             df_new['fare_amount'] = actual_fare
-
             if os.path.exists(data_store_path):
                 df_existing = pd.read_csv(data_store_path)
 
@@ -168,16 +171,11 @@ def retrain():
                 # Drop non-feature columns
                 cols_to_drop = ['pickup_datetime', 'fare_amount']
                 df_existing_features = df_existing_fe.drop(columns=[col for col in cols_to_drop if col in df_existing_fe])
-                df_new_features = df_new.drop(columns=[col for col in cols_to_drop if col in df_new])
-
-                # Covariance similarity check
+                df_new_features = df_new.drop(columns=[col for col in cols_to_drop if col in df_new]) 
                 cov_existing = np.cov(df_existing_features.T)
                 cov_new = np.cov(df_new_features.T)
-
-                # Frobenius norm based similarity
                 diff_norm = norm(cov_existing - cov_new, 'fro')
-                similarity_threshold = 1.0  # You can tweak this threshold
-
+                similarity_threshold = 1.0 
                 if diff_norm < similarity_threshold:
                     df_combined = pd.concat([df_existing, df_new])
                     df_combined.to_csv(data_store_path, index=False)
@@ -189,41 +187,17 @@ def retrain():
                 msg = f"Prediction: ${pred:.2f}, First retraining data stored."
         else:
             msg = f"Prediction: ${pred:.2f}, Error too large. Not stored."
-
         return render_template('index.html', prediction=msg)
 
     except Exception as e:
         return render_template('index.html', prediction=f"Retrain Error: {str(e)}")
 
 
-@app.route('/train_model', methods=['POST'])
+@app.route('/train_model')
 def train_model():
     try:
-        if not os.path.exists(data_store_path):
-            return jsonify({'status': 'No new data to train on.'})
-
-        df = pd.read_csv(data_store_path)
-
-        if 'fare_amount' not in df.columns:
-            return jsonify({'status': 'Missing fare_amount in data.'})
-
-        X = df.drop(columns=['fare_amount', 'pickup_datetime'])
-        y = df['fare_amount']
-
-        model = GradientBoostingRegressor(
-            loss='absolute_error',
-            learning_rate=0.1,
-            n_estimators=500,
-            max_depth=3,
-            random_state=42
-        )
-        model.fit(X, y)
-
-        # Backup old model and save new one
-        pickle.dump(model_main, model_backup_path)
-        pickle.dump(model, model_main_path)
-
-        return jsonify({'status': 'Model retrained and saved.'})
+        result = train_and_save_model()
+        return jsonify(result) 
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -232,11 +206,18 @@ def fare_statistics():
     group_type = request.args.get('type', '').lower()
     year = request.args.get('year_name')
     month = request.args.get('month_name')
-
+    query = {
+        "group_type": group_type,
+        "year": year,
+        "month": month
+    }
+    cached_doc = cache_collection.find_one(query)
+    if cached_doc:
+        cached_result = cached_doc.get("result")
+        return jsonify(cached_result)
     df, error = load_and_prepare_data()
     if error:
         return jsonify({'error': error})
-
     if 'fare_amount' not in df.columns:
         return jsonify({'error': "'fare_amount' column missing."})
 
@@ -244,8 +225,15 @@ def fare_statistics():
     if error:
         return jsonify({'error': error})
 
-    return jsonify(result)
+    # Cache result in MongoDB
+    cache_collection.insert_one({
+        "group_type": group_type,
+        "year": year,
+        "month": month,
+        "result": result
+    })
 
+    return jsonify(result)
 
 @app.route('/statistics/passenger_count', methods=['GET'])
 def passenger_statistics():
