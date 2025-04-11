@@ -3,6 +3,7 @@ import { Image, Text, StyleSheet, TouchableOpacity, Alert, FlatList, View } from
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 
+import { useNavigation } from '@react-navigation/native';
 import { HelloWave } from '@/components/HelloWave';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -10,6 +11,8 @@ import { ThemedView } from '@/components/ThemedView';
 export default function HomeScreen() {
   const [rooms, setRooms] = useState<string[]>([]);
   const router = useRouter();
+
+  const navigation = useNavigation();
 
   const requestLocationPermission = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -34,12 +37,12 @@ export default function HomeScreen() {
     } catch (error) {
       // Alert.alert('Error fetching rooms', error.message);
     }finally{
-      // router.push('./(tabs)/Chat');
+      // navigation.navigate('./(tabs)/Chat');
     }
   };
 
   const handleRoomPress = (roomId: string) => {
-    router.push('./(tabs)/Chat');
+    navigation.navigate('./(tabs)/Chat');
   };
 
   const renderHeader = () => (
