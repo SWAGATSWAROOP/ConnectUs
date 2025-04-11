@@ -45,7 +45,7 @@ export default function ChatRoom() {
       console.log("📩 Received from server:", event.data);
       try {
         const data = JSON.parse(event.data); // 👈 FIXED
-
+        if(data.user_id == currentUser.email)return
         setMessages((prev) => [
           ...prev,
           {

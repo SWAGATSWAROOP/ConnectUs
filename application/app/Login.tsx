@@ -1,14 +1,47 @@
 import React, { useState } from 'react';
+import { Alert } from 'react-native';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
 
-  const handleLogin = () => {
-    console.log('Email:', email);
-    console.log('Password:', password);
+    try {
+      const response = await fetch("http://10.10.195.18:8000/api/auth/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.msg || "Login failed");
+      }
+
+      console.log("Login successful:", data);
+
+      Alert.alert("Success", "Login successful!", [
+        {
+          text: "OK",
+          onPress: () => navigation.navigate("/"), 
+        },
+      ]);
+    } catch (error: any) {
+      console.error("Error during login:", error.message);
+      Alert.alert("Error", error.message);
+    }
   };
 
   const handleSignupNavigation = () => {
