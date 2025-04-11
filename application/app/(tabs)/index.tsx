@@ -42,7 +42,7 @@ export default function HomeScreen() {
   };
 
   const handleRoomPress = (roomId: string) => {
-    navigation.navigate('./(tabs)/Chat');
+    navigation.navigate('Chat');
   };
 
   const renderHeader = () => (
