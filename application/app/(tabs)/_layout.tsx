@@ -1,12 +1,12 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import { Tabs } from "expo-router";
+import React from "react";
+import { Platform, Image } from "react-native";
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { HapticTab } from "@/components/HapticTab";
+import TabBarBackground from "@/components/ui/TabBarBackground";
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import icons from "@/constants/icons"; // This is your exported icon object
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -14,36 +14,70 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
-            position: 'absolute',
+            position: "absolute",
           },
           default: {},
         }),
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Home",
+          tabBarIcon: ({ color, focused }) => (
+            <Image
+              source={icons.home}
+              style={{
+                width: 24,
+                height: 24,
+                tintColor: color,
+                opacity: focused ? 1 : 0.6,
+              }}
+              resizeMode="contain"
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="Chat"
         options={{
-          title: 'Chat',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="chat.fill" color={color} />,
+          title: "Chat",
+          tabBarIcon: ({ color, focused }) => (
+            <Image
+              source={icons.chat}
+              style={{
+                width: 24,
+                height: 24,
+                tintColor: color,
+                opacity: focused ? 1 : 0.6,
+              }}
+              resizeMode="contain"
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="SignIn"
         options={{
-          title: 'Sign In',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="menu.fill" color={color} />,
+          title: "Sign In",
+          tabBarIcon: ({ color, focused }) => (
+            <Image
+              source={icons.person}
+              style={{
+                width: 24,
+                height: 24,
+                tintColor: color,
+                opacity: focused ? 1 : 0.6,
+              }}
+              resizeMode="contain"
+            />
+          ),
         }}
       />
     </Tabs>
