@@ -13,13 +13,22 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	"github.com/segmentio/kafka-go"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var rdb = redis.NewClient(&redis.Options{
 	Addr: "localhost:6379",
 })
+
+type RoomParticipant struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	RoomID    string             `bson:"room_id"`
+	UserEmail string             `bson:"user_email"`
+	JoinedAt  time.Time          `bson:"joined_at"`
+}
 
 const geoKey = "user_locations"
 
@@ -55,6 +64,77 @@ func main() {
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
+	})
+
+	r.POST("/schedule", func(c *gin.Context) {
+		var req struct {
+			Email     string  `json:"email"`
+			Lat       float64 `json:"lat"`
+			Lng       float64 `json:"lng"`
+			Timestamp int64   `json:"timestamp"` // Unix time
+		}
+
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
+			return
+		}
+
+		scheduleTime := time.Unix(req.Timestamp, 0)
+		if scheduleTime.Before(time.Now()) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Scheduled time must be in the future"})
+			return
+		}
+
+		_, err := mongoClient.Database("chatDB").Collection("schedules").InsertOne(context.Background(), ScheduledJoin{
+			Email:     req.Email,
+			Lat:       req.Lat,
+			Lng:       req.Lng,
+			Scheduled: scheduleTime,
+			Joined:    false,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB insert failed"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Join scheduled"})
+	})
+
+	r.POST("/review", func(c *gin.Context) {
+		var req UserReview
+		if err := c.ShouldBindJSON(&req); err != nil || req.Rating < 1 || req.Rating > 5 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+			return
+		}
+
+		req.ReviewedAt = time.Now()
+
+		_, err := mongoClient.Database("chatDB").Collection("user_reviews").InsertOne(context.Background(), req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save review"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Review submitted"})
+	})
+
+	r.GET("/reviews/:email", func(c *gin.Context) {
+		email := c.Param("email")
+
+		cursor, err := mongoClient.Database("chatDB").Collection("user_reviews").Find(context.Background(), bson.M{
+			"reviewee": email,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch reviews"})
+			return
+		}
+		var reviews []UserReview
+		if err := cursor.All(context.Background(), &reviews); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cursor decode error"})
+			return
+		}
+
+		c.JSON(http.StatusOK, reviews)
 	})
 
 	r.GET("/rooms", func(c *gin.Context) {
@@ -120,6 +200,15 @@ func main() {
 
 		for _, loc := range nearby {
 			room := fmt.Sprintf("room_%.3f_%.3f", loc.Latitude, loc.Longitude)
+			_, err := mongoClient.Database("chatDB").Collection("room_participants").InsertOne(ctx, RoomParticipant{
+				RoomID:    room,
+				UserEmail: email,
+				JoinedAt:  time.Now(),
+			})
+			if err != nil {
+				log.Println("Mongo insert error:", err)
+			}
+
 			if !roomMap[room] {
 				roomMap[room] = true
 				rooms = append(rooms, room)
@@ -152,7 +241,7 @@ func main() {
 	r.GET("/ws", func(c *gin.Context) {
 		handleWebSocket(c.Writer, c.Request)
 	})
-
+	startScheduler()
 	r.Run()
 }
 
@@ -297,4 +386,76 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+type ScheduledJoin struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	Email     string             `bson:"email"`
+	Lat       float64            `bson:"lat"`
+	Lng       float64            `bson:"lng"`
+	Scheduled time.Time          `bson:"scheduled"`
+	Joined    bool               `bson:"joined"`
+}
+
+func startScheduler() {
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+
+		for {
+			<-ticker.C
+
+			now := time.Now()
+			bufferStart := now.Add(-1 * time.Hour)
+			bufferEnd := now.Add(1 * time.Hour)
+
+			ctx := context.Background()
+			cursor, err := mongoClient.Database("chatDB").Collection("schedules").Find(ctx, bson.M{
+				"joined":    false,
+				"scheduled": bson.M{"$gte": bufferStart, "$lte": bufferEnd},
+			})
+			if err != nil {
+				log.Println("Scheduler query error:", err)
+				continue
+			}
+
+			var jobs []ScheduledJoin
+			if err := cursor.All(ctx, &jobs); err != nil {
+				log.Println("Cursor decode error:", err)
+				continue
+			}
+
+			for _, job := range jobs {
+				// Simulate call to /rooms (or directly perform the logic)
+				_, err := rdb.GeoAdd(ctx, geoKey, &redis.GeoLocation{
+					Name:      job.Email,
+					Longitude: job.Lng,
+					Latitude:  job.Lat,
+				}).Result()
+				if err != nil {
+					log.Println("GeoAdd error for", job.Email, ":", err)
+					continue
+				}
+				log.Println("Auto joined user:", job.Email)
+
+				// Mark as joined
+				_, err = mongoClient.Database("chatDB").Collection("schedules").UpdateByID(ctx, job.ID, bson.M{
+					"$set": bson.M{"joined": true},
+				})
+				if err != nil {
+					log.Println("Update join status error:", err)
+				}
+			}
+		}
+	}()
+}
+
+type UserReview struct {
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	Reviewer   string             `bson:"reviewer"` // email
+	Reviewee   string             `bson:"reviewee"` // email
+	RoomID     string             `bson:"room_id"`
+	Rating     int                `bson:"rating"` // 1 to 5
+	Comment    string             `bson:"comment"`
+	ReviewedAt time.Time          `bson:"reviewed_at"`
 }
