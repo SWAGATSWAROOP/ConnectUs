@@ -7,6 +7,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ImageBackground,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -44,7 +45,7 @@ export default function ChatRoom() {
       console.log("📩 Received from server:", event.data);
       try {
         const data = JSON.parse(event.data); // 👈 FIXED
-    
+
         setMessages((prev) => [
           ...prev,
           {
@@ -59,10 +60,10 @@ export default function ChatRoom() {
         console.error("❌ JSON parse error:", err);
       }
     };
-    
-    
 
-    ws.current.onerror = (e:any) => {
+
+
+    ws.current.onerror = (e: any) => {
       console.error("WebSocket error", e.message);
     };
 
@@ -99,60 +100,65 @@ export default function ChatRoom() {
 
   return (
     <SafeAreaView className="flex-1 mt-4">
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      <ImageBackground
+        source={require("../../assets/images/chatbackground.jpeg")} 
+        resizeMode="cover"
+        style={{ flex: 1 }}
       >
-        <ScrollView
-          className="flex-1 px-4 py-2"
-          contentContainerStyle={{ paddingBottom: 20 }}
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          {messages.map((msg) => {
-            const isCurrentUser = msg.senderEmail === currentUser.email;
-            return (
-              <View
-                key={msg.id}
-                className={`max-w-[70%] px-4 py-3 my-2 rounded-2xl ${
-                  isCurrentUser
-                    ? "bg-blue-600 self-end rounded-br-none"
-                    : msg.senderEmail === "system"
-                    ? "bg-yellow-100 self-center rounded-xl"
-                    : "bg-gray-300 self-start rounded-bl-none"
-                }`}
-              >
-                {!isCurrentUser && msg.senderEmail !== "system" && (
-                  <Text className="text-xs text-gray-500 mb-1">
-                    {msg.senderName}
-                  </Text>
-                )}
-                <Text
-                  className={`${isCurrentUser ? "text-white" : "text-gray-600"}`}
-                >
-                  {msg.text}
-                </Text>
-                <Text className="text-[10px] text-gray-400 mt-1">
-                  {new Date(msg.time * 1000).toLocaleTimeString()}
-                </Text>
-              </View>
-            );
-          })}
-        </ScrollView>
-
-        <View className="flex-row items-center px-4 py-2 border-t border-gray-200 bg-white">
-          <TextInput
-            className="flex-1 bg-gray-100 rounded-full px-4 py-2 mr-2"
-            placeholder="Type a message..."
-            value={input}
-            onChangeText={setInput}
-          />
-          <TouchableOpacity
-            className="bg-blue-500 px-4 py-2 rounded-full"
-            onPress={handleSend}
+          <ScrollView
+            className="flex-1 px-4 py-2"
+            contentContainerStyle={{ paddingBottom: 20 }}
           >
-            <Text className="text-white font-bold">Send</Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            {messages.map((msg) => {
+              const isCurrentUser = msg.senderEmail === currentUser.email;
+              return (
+                <View
+                  key={msg.id}
+                  className={`max-w-[70%] px-4 py-3 my-2 rounded-2xl ${isCurrentUser
+                      ? "bg-blue-600 self-end rounded-br-none"
+                      : msg.senderEmail === "system"
+                        ? "bg-yellow-100 self-center rounded-xl"
+                        : "bg-lime-500 self-start rounded-bl-none"
+                    }`}
+                >
+                  {!isCurrentUser && msg.senderEmail !== "system" && (
+                    <Text className="text-xs text-gray-600 mb-1">
+                      {msg.senderName}
+                    </Text>
+                  )}
+                  <Text
+                    className={`${isCurrentUser ? "text-white" : "text-gray-800"}`}
+                  >
+                    {msg.text}
+                  </Text>
+                  <Text className="text-[10px] text-gray-200 mt-1">
+                    {new Date(msg.time * 1000).toLocaleTimeString()}
+                  </Text>
+                </View>
+              );
+            })}
+          </ScrollView>
+      
+      <View className="flex-row items-center px-4 py-4 border-t border-gray-200 bg-white">
+        <TextInput
+          className="flex-1 bg-gray-100 rounded-full px-4 py-4 mr-2"
+          placeholder="Type a message..."
+          value={input}
+          onChangeText={setInput}
+        />
+        <TouchableOpacity
+          className="bg-blue-500 px-4 py-2 rounded-full"
+          onPress={handleSend}
+        >
+          <Text className="text-white font-bold py-2">Send</Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
+    </ImageBackground>
+    </SafeAreaView >
   );
 }
