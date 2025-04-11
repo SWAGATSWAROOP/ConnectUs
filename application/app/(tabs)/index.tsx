@@ -40,7 +40,7 @@ export default function HomeScreen() {
       </ThemedView>
       <TouchableOpacity
         onPress={requestLocationPermission}
-        className="bg-yellow-400 py-4 mt-4 rounded-full"
+        className="bg-yellow-400 py-4 mt-8 rounded-full"
       >
         <Text className="text-center font-semibold text-black">Location Permission</Text>
       </TouchableOpacity>
